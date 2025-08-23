@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from controllers.auth_controller import login
+from utils import show_temp_message
 from tkinter import messagebox
 
 class LoginView:
@@ -32,18 +33,21 @@ class LoginView:
         matricola = self.entry_matr.get().strip()
         password = self.entry_pw.get().strip()
 
-        # Controllo campi vuoti
         if not matricola or not password:
-            messagebox.showerror("Errore", "Tutti i campi devono essere compilati!")
+            show_temp_message(self.frame, "⚠️ Tutti i campi devono essere compilati!", color="red")
             return
 
         student_id = login(matricola, password)
         if student_id:
-            self.frame.destroy()
-            from views.main_view import MainView
-            MainView(self.master, student_id)
+            show_temp_message(self.frame, "✅ Login effettuato con successo!", color="green")
+            self.master.after(1200, lambda: self.open_main(student_id))  # entra dopo 1.2 sec
         else:
-            messagebox.showerror("Errore", "Credenziali errate!")
+            show_temp_message(self.frame, "❌ Credenziali errate!", color="red")
+
+    def open_main(self, student_id):
+        self.frame.destroy()
+        from views.main_view import MainView
+        MainView(self.master, student_id)
 
     def show_register(self):
         self.frame.destroy()

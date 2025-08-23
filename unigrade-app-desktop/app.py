@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from database import init_db
 from views.login_view import LoginView
+from utils import set_app_icon
 
 if __name__ == "__main__":
     init_db()
@@ -9,16 +10,15 @@ if __name__ == "__main__":
 
     root = ctk.CTk()
 
-    # Adatta alle dimensioni dello schermo
+    # adatta alle dimensioni dello schermo
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
-
-    # Opzionale: lascia un piccolo margine di 50 px su ciascun lato
     width = screen_width - 100
     height = screen_height - 100
-
     root.geometry(f"{width}x{height}+50+50")
+
     root.title("UniGrade - Libretto Universitario Digitale")
+    set_app_icon(root)  # 👈 icona qui
 
     LoginView(root)
     root.mainloop()

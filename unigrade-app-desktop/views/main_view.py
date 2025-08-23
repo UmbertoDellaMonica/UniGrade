@@ -32,33 +32,135 @@ class MainView:
         ctk.CTkLabel(self.content, text="Usa la sidebar per navigare.", font=("Arial", 14)).pack(pady=10)
 
     def show_libretto(self):
-        for w in self.content.winfo_children(): w.destroy()
-        cols = ("Nome Esame", "Voto", "CFU")
-        self.tree = ttk.Treeview(self.content, columns=cols, show="headings", height=15)
+        # Pulisci il content
+        for w in self.content.winfo_children():
+            w.destroy()
+
+        # Header Libretto
+        ctk.CTkLabel(
+            self.content, 
+            text="📚 Libretto Esami", 
+            font=("Arial", 22, "bold")
+        ).pack(pady=(10,20))
+
+        # Frame principale dei dati
+        libretto_frame = ctk.CTkFrame(self.content, corner_radius=15, fg_color="#2e2e3e")
+        libretto_frame.pack(fill="both", expand=True, padx=20, pady=10)
+
+        # Treeview esami
+        cols = ("Nome Esame", "Voto", "CFU", "Stato")
+        self.tree = ttk.Treeview(libretto_frame, columns=cols, show="headings", height=12)
         for col in cols:
             self.tree.heading(col, text=col)
-            self.tree.column(col, width=150, anchor="center")
-        self.tree.pack(pady=10)
-        self.load_exams()
+            self.tree.column(col, anchor="center", width=150)
+        self.tree.pack(fill="both", expand=True, padx=10, pady=10)
 
-        btn_frame = ctk.CTkFrame(self.content)
-        btn_frame.pack(pady=10)
-        ctk.CTkButton(btn_frame, text="Aggiungi", command=self.add_exam).pack(side="left", padx=5)
-        ctk.CTkButton(btn_frame, text="Modifica", command=self.edit_exam).pack(side="left", padx=5)
-        ctk.CTkButton(btn_frame, text="Rimuovi", command=self.remove_exam).pack(side="left", padx=5)
+        # **Creiamo prima la label della media ponderata**
+        self.avg_label = ctk.CTkLabel(self.content, text="", font=("Arial", 14, "bold"))
+        self.avg_label.pack(pady=(10,0))
+
+        # Ora possiamo caricare gli esami e aggiornare la media
+        self.load_exams()  
+
+        # Frame bottoni gestione
+        btn_frame = ctk.CTkFrame(self.content, corner_radius=10, fg_color="#222233")
+        btn_frame.pack(pady=15, padx=20, fill="x")
+
+        ctk.CTkButton(btn_frame, text="➕ Aggiungi", command=self.add_exam, width=150, fg_color="#4da6ff", hover_color="#66b3ff").pack(side="left", padx=10, pady=5)
+        ctk.CTkButton(btn_frame, text="✏️ Modifica", command=self.edit_exam, width=150, fg_color="#ffb84d", hover_color="#ffc966").pack(side="left", padx=10, pady=5)
+        ctk.CTkButton(btn_frame, text="🗑️ Rimuovi", command=self.remove_exam, width=150, fg_color="#ff4d4d", hover_color="#ff6666").pack(side="left", padx=10, pady=5)
+
+
 
     def load_exams(self):
-        for i in self.tree.get_children(): self.tree.delete(i)
+        for i in self.tree.get_children():
+            self.tree.delete(i)
+
         exams = get_exams(self.student_id)
-        for e in exams: self.tree.insert("", "end", iid=e[0], values=(e[1], e[2], e[3]))
+        total_weighted = 0
+        total_cfu = 0
+        for e in exams:
+            stato = "Passato ✅" if e[2] >= 18 else "Non superato ❌"
+            self.tree.insert("", "end", iid=e[0], values=(e[1], e[2], e[3], stato))
+            total_weighted += e[2] * e[3]
+            total_cfu += e[3]
+
+        self.total_weighted = total_weighted
+        self.total_cfu = total_cfu
+        self.update_avg()
+
+    def update_avg(self):
+        if hasattr(self, 'total_cfu') and self.total_cfu > 0:
+            media = self.total_weighted / self.total_cfu
+            self.avg_label.configure(text=f"📊 Media ponderata: {media:.2f}")
+        else:
+            self.avg_label.configure(text="📊 Media ponderata: N/A")
 
     def add_exam(self):
-        nome = simpledialog.askstring("Nuovo Esame", "Nome:")
-        voto = simpledialog.askinteger("Voto", "Inserisci voto (18-30):")
-        cfu = simpledialog.askinteger("CFU", "Inserisci CFU:")
-        if nome and voto and cfu:
+        import customtkinter as ctk
+        from tkinter import messagebox
+
+        # Creiamo una finestra modale
+        modal = ctk.CTkToplevel(self.master)
+        modal.title("Aggiungi Nuovo Esame")
+        modal.geometry("400x500")
+        modal.grab_set()  # Blocca l'interazione con la finestra principale
+        modal.resizable(False, False)
+
+        # Titolo
+        ctk.CTkLabel(modal, text="📚 Nuovo Esame", font=("Arial", 20, "bold")).pack(pady=(20,15))
+
+        # Frame dei campi
+        fields_frame = ctk.CTkFrame(modal, corner_radius=15, fg_color="#2e2e3e")
+        fields_frame.pack(fill="both", expand=True, padx=20, pady=10)
+
+        # Entry + Label per Nome
+        ctk.CTkLabel(fields_frame, text="Nome Esame", font=("Arial", 14)).grid(row=0, column=0, sticky="e", padx=10, pady=10)
+        entry_nome = ctk.CTkEntry(fields_frame, width=200)
+        entry_nome.grid(row=0, column=1, padx=10, pady=10)
+
+        # Entry + Label per Voto
+        ctk.CTkLabel(fields_frame, text="Voto", font=("Arial", 14)).grid(row=1, column=0, sticky="e", padx=10, pady=10)
+        entry_voto = ctk.CTkEntry(fields_frame, width=100)
+        entry_voto.grid(row=1, column=1, padx=10, pady=10)
+
+        # Entry + Label per CFU
+        ctk.CTkLabel(fields_frame, text="CFU", font=("Arial", 14)).grid(row=2, column=0, sticky="e", padx=10, pady=10)
+        entry_cfu = ctk.CTkEntry(fields_frame, width=100)
+        entry_cfu.grid(row=2, column=1, padx=10, pady=10)
+
+        # Label messaggi in tempo reale
+        msg_label = ctk.CTkLabel(modal, text="", font=("Arial", 12), text_color="#ff6666")
+        msg_label.pack(pady=(5,0))
+
+        # Funzione di conferma
+        def conferma():
+            nome = entry_nome.get().strip()
+            try:
+                voto = int(entry_voto.get())
+                cfu = int(entry_cfu.get())
+            except ValueError:
+                msg_label.configure(text="Voto e CFU devono essere numeri!")
+                return
+
+            if not nome or voto < 18 or voto > 30 or cfu <= 0:
+                msg_label.configure(text="Controlla i valori inseriti!")
+                return
+
             add_exam(self.student_id, nome, voto, cfu)
             self.load_exams()
+            modal.destroy()
+            # Breve messaggio di successo
+            success = ctk.CTkLabel(self.master, text="✅ Esame aggiunto!", font=("Arial", 14, "bold"), text_color="#4dd17f")
+            success.place(relx=0.5, rely=0.95, anchor="s")
+            self.master.after(2000, success.destroy)
+
+        # Pulsante conferma
+        ctk.CTkButton(modal, text="Aggiungi", command=conferma, width=180, fg_color="#4da6ff", hover_color="#66b3ff").pack(pady=(20,15))
+
+        # Pulsante annulla
+        ctk.CTkButton(modal, text="Annulla", command=modal.destroy, width=180, fg_color="#888888", hover_color="#aaaaaa").pack(pady=(0,15))
+
 
     def edit_exam(self):
         sel = self.tree.selection()
