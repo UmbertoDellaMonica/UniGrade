@@ -3,7 +3,7 @@ import sqlite3
 DB_NAME = "unigrade.db"
 
 def init_db():
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
     CREATE TABLE IF NOT EXISTS students (
@@ -29,4 +29,7 @@ def init_db():
     conn.close()
 
 def get_connection():
-    return sqlite3.connect(DB_NAME)
+    """Restituisce una connessione SQLite con row_factory per ottenere dizionari"""
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    return conn

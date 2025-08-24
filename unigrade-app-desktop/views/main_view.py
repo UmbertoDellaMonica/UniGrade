@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from tkinter import ttk, simpledialog, messagebox
 from controllers.exam_controller import get_exams, add_exam, update_exam, remove_exam
-
+from utils import set_app_icon
 import matplotlib.pyplot as plt
 
 class MainView:
@@ -32,43 +32,99 @@ class MainView:
         ctk.CTkLabel(self.content, text="Usa la sidebar per navigare.", font=("Arial", 14)).pack(pady=10)
 
     def show_libretto(self):
+        import tkinter as tk
+        from tkinter import ttk
+        import customtkinter as ctk
+        from PIL import Image, ImageTk
+
         # Pulisci il content
         for w in self.content.winfo_children():
             w.destroy()
 
-        # Header Libretto
+        # Header principale
         ctk.CTkLabel(
             self.content, 
             text="📚 Libretto Esami", 
-            font=("Arial", 22, "bold")
+            font=("Arial", 24, "bold")
         ).pack(pady=(10,20))
 
-        # Frame principale dei dati
+        # Frame principale
         libretto_frame = ctk.CTkFrame(self.content, corner_radius=15, fg_color="#2e2e3e")
         libretto_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
-        # Treeview esami
-        cols = ("Nome Esame", "Voto", "CFU", "Stato")
-        self.tree = ttk.Treeview(libretto_frame, columns=cols, show="headings", height=12)
-        for col in cols:
-            self.tree.heading(col, text=col)
-            self.tree.column(col, anchor="center", width=150)
-        self.tree.pack(fill="both", expand=True, padx=10, pady=10)
+        # --- Icone per intestazioni ---
+        self.icons = {
+            "exam": ImageTk.PhotoImage(Image.open("assets/icons/book.png").resize((20,20))),
+            "vote": ImageTk.PhotoImage(Image.open("assets/icons/star.png").resize((20,20))),
+            "cfu": ImageTk.PhotoImage(Image.open("assets/icons/coin.png").resize((20,20))),
+            "status": ImageTk.PhotoImage(Image.open("assets/icons/check.png").resize((20,20))),
+        }
 
-        # **Creiamo prima la label della media ponderata**
-        self.avg_label = ctk.CTkLabel(self.content, text="", font=("Arial", 14, "bold"))
+        headers = [
+            ("Nome Esame", self.icons["exam"]),
+            ("Voto", self.icons["vote"]),
+            ("CFU", self.icons["cfu"]),
+            ("Stato", self.icons["status"]),
+        ]
+
+        # --- Header personalizzato ---
+        header_frame = ctk.CTkFrame(libretto_frame, fg_color="#2b2b3d", corner_radius=8)
+        header_frame.pack(fill="x", pady=(5,0))
+
+        for text, icon in headers:
+            lbl = ctk.CTkLabel(
+                header_frame,
+                text=f" {text}",
+                image=icon,
+                compound="left",
+                font=("Arial", 14, "bold"),
+                padx=10
+            )
+            lbl.pack(side="left", expand=True, fill="x", padx=5, pady=5)
+
+        # --- Treeview senza intestazioni (usiamo solo il body) ---
+        cols = ("Nome Esame", "Voto", "CFU", "Stato")
+        self.tree = ttk.Treeview(
+            libretto_frame,
+            columns=cols,
+            show="headings",  # nascondiamo i titoli perché li simuliamo noi
+            height=14
+        )
+
+        # Stile tabella
+        style = ttk.Style()
+        style.configure("Treeview",
+            background="#1e1e2f",
+            foreground="white",
+            rowheight=40,
+            fieldbackground="#1e1e2f",
+            font=("Arial", 13)
+        )
+        style.map("Treeview", background=[("selected", "#4da6ff")])
+
+        # Larghezza colonne
+        for col in cols:
+            self.tree.column(col, anchor="center", width=200)
+
+        self.tree.pack(fill="both", expand=True, padx=10, pady=(0,10))
+
+        # Label media
+        self.avg_label = ctk.CTkLabel(self.content, text="", font=("Arial", 15, "bold"))
         self.avg_label.pack(pady=(10,0))
 
-        # Ora possiamo caricare gli esami e aggiornare la media
-        self.load_exams()  
+        # Carica dati esami
+        self.load_exams()
 
-        # Frame bottoni gestione
+        # --- Bottoni ---
         btn_frame = ctk.CTkFrame(self.content, corner_radius=10, fg_color="#222233")
         btn_frame.pack(pady=15, padx=20, fill="x")
 
-        ctk.CTkButton(btn_frame, text="➕ Aggiungi", command=self.add_exam, width=150, fg_color="#4da6ff", hover_color="#66b3ff").pack(side="left", padx=10, pady=5)
-        ctk.CTkButton(btn_frame, text="✏️ Modifica", command=self.edit_exam, width=150, fg_color="#ffb84d", hover_color="#ffc966").pack(side="left", padx=10, pady=5)
-        ctk.CTkButton(btn_frame, text="🗑️ Rimuovi", command=self.remove_exam, width=150, fg_color="#ff4d4d", hover_color="#ff6666").pack(side="left", padx=10, pady=5)
+        ctk.CTkButton(btn_frame, text="➕ Aggiungi", command=self.add_exam,
+                    width=150, fg_color="#4da6ff", hover_color="#66b3ff").pack(side="left", padx=10, pady=5)
+        ctk.CTkButton(btn_frame, text="✏️ Modifica", command=self.edit_exam,
+                    width=150, fg_color="#ffb84d", hover_color="#ffc966").pack(side="left", padx=10, pady=5)
+        ctk.CTkButton(btn_frame, text="🗑️ Rimuovi", command=self.remove_exam,
+                    width=150, fg_color="#ff4d4d", hover_color="#ff6666").pack(side="left", padx=10, pady=5)
 
 
 
@@ -106,6 +162,8 @@ class MainView:
         modal.geometry("400x500")
         modal.grab_set()  # Blocca l'interazione con la finestra principale
         modal.resizable(False, False)
+        set_app_icon(modal)
+
 
         # Titolo
         ctk.CTkLabel(modal, text="📚 Nuovo Esame", font=("Arial", 20, "bold")).pack(pady=(20,15))
@@ -163,22 +221,133 @@ class MainView:
 
 
     def edit_exam(self):
+        import customtkinter as ctk
+        from tkinter import messagebox
+
         sel = self.tree.selection()
-        if not sel: return
+        if not sel:
+            messagebox.showwarning("Attenzione", "Seleziona un esame da modificare!")
+            return
+
         eid = sel[0]
         vals = self.tree.item(eid, "values")
-        new_nome = simpledialog.askstring("Modifica Esame","Nome:",initialvalue=vals[0])
-        new_voto = simpledialog.askinteger("Modifica Voto","Voto:",initialvalue=int(vals[1]))
-        new_cfu = simpledialog.askinteger("Modifica CFU","CFU:",initialvalue=int(vals[2]))
-        if new_nome and new_voto and new_cfu:
-            update_exam(eid, new_nome, new_voto, new_cfu)
+
+        # Finestra modale
+        modal = ctk.CTkToplevel(self.master)
+        modal.title("Modifica Esame")
+        modal.geometry("400x500")
+        modal.grab_set()
+        modal.resizable(False, False)
+        set_app_icon(modal)
+
+
+        # Titolo
+        ctk.CTkLabel(modal, text="✏️ Modifica Esame", font=("Arial", 20, "bold")).pack(pady=(20,15))
+
+        # Frame campi
+        fields_frame = ctk.CTkFrame(modal, corner_radius=15, fg_color="#2e2e3e")
+        fields_frame.pack(fill="both", expand=True, padx=20, pady=10)
+
+        # Nome Esame
+        ctk.CTkLabel(fields_frame, text="Nome Esame", font=("Arial", 14)).grid(row=0, column=0, sticky="e", padx=10, pady=10)
+        entry_nome = ctk.CTkEntry(fields_frame, width=200)
+        entry_nome.insert(0, vals[0])  # Precompila
+        entry_nome.grid(row=0, column=1, padx=10, pady=10)
+
+        # Voto
+        ctk.CTkLabel(fields_frame, text="Voto", font=("Arial", 14)).grid(row=1, column=0, sticky="e", padx=10, pady=10)
+        entry_voto = ctk.CTkEntry(fields_frame, width=100)
+        entry_voto.insert(0, vals[1])
+        entry_voto.grid(row=1, column=1, padx=10, pady=10)
+
+        # CFU
+        ctk.CTkLabel(fields_frame, text="CFU", font=("Arial", 14)).grid(row=2, column=0, sticky="e", padx=10, pady=10)
+        entry_cfu = ctk.CTkEntry(fields_frame, width=100)
+        entry_cfu.insert(0, vals[2])
+        entry_cfu.grid(row=2, column=1, padx=10, pady=10)
+
+        # Label messaggi
+        msg_label = ctk.CTkLabel(modal, text="", font=("Arial", 12), text_color="#ff6666")
+        msg_label.pack(pady=(5,0))
+
+        # Funzione conferma
+        def conferma():
+            nome = entry_nome.get().strip()
+            try:
+                voto = int(entry_voto.get())
+                cfu = int(entry_cfu.get())
+            except ValueError:
+                msg_label.configure(text="Voto e CFU devono essere numeri!")
+                return
+
+            if not nome or voto < 18 or voto > 30 or cfu <= 0:
+                msg_label.configure(text="Controlla i valori inseriti!")
+                return
+
+            update_exam(eid, nome, voto, cfu)
             self.load_exams()
+            modal.destroy()
+
+            # Messaggio di successo
+            success = ctk.CTkLabel(self.master, text="✅ Esame modificato!", font=("Arial", 14, "bold"), text_color="#4dd17f")
+            success.place(relx=0.5, rely=0.95, anchor="s")
+            self.master.after(2000, success.destroy)
+
+        # Pulsanti
+        ctk.CTkButton(modal, text="Salva Modifiche", command=conferma,
+                    width=180, fg_color="#4da6ff", hover_color="#66b3ff").pack(pady=(20,15))
+        ctk.CTkButton(modal, text="Annulla", command=modal.destroy,
+                    width=180, fg_color="#888888", hover_color="#aaaaaa").pack(pady=(0,15))
+
 
     def remove_exam(self):
+        import customtkinter as ctk
+        from tkinter import messagebox
+
         sel = self.tree.selection()
-        if not sel: return
-        remove_exam(sel[0])
-        self.load_exams()
+        if not sel:
+            messagebox.showwarning("Attenzione", "Seleziona un esame da eliminare!")
+            return
+
+        eid = sel[0]
+        vals = self.tree.item(eid, "values")
+
+        # Finestra modale
+        modal = ctk.CTkToplevel(self.master)
+        modal.title("Conferma Eliminazione")
+        modal.geometry("400x250")
+        modal.grab_set()
+        modal.resizable(False, False)
+        set_app_icon(modal)
+
+
+        # Titolo
+        ctk.CTkLabel(modal, text="⚠️ Eliminare Esame?", font=("Arial", 20, "bold"), text_color="#ff5555").pack(pady=(20, 10))
+
+        # Messaggio con info esame
+        info_text = f"Nome: {vals[0]}\nVoto: {vals[1]}\nCFU: {vals[2]}"
+        ctk.CTkLabel(modal, text=info_text, font=("Arial", 14), text_color="#ffffff").pack(pady=(5, 20))
+
+        # Funzione di conferma
+        def conferma():
+            remove_exam(eid)
+            self.load_exams()
+            modal.destroy()
+            # Messaggio successo
+            success = ctk.CTkLabel(self.master, text="🗑️ Esame eliminato!", font=("Arial", 14, "bold"), text_color="#ff6666")
+            success.place(relx=0.5, rely=0.95, anchor="s")
+            self.master.after(2000, success.destroy)
+
+        # Pulsanti
+        buttons_frame = ctk.CTkFrame(modal, fg_color="transparent")
+        buttons_frame.pack(pady=10)
+
+        ctk.CTkButton(buttons_frame, text="✅ Conferma", command=conferma,
+                    width=150, fg_color="#e63946", hover_color="#ff4d5a").grid(row=0, column=0, padx=10)
+
+        ctk.CTkButton(buttons_frame, text="❌ Annulla", command=modal.destroy,
+                    width=150, fg_color="#888888", hover_color="#aaaaaa").grid(row=0, column=1, padx=10)
+
 
     def show_graph(self):
         exams = get_exams(self.student_id)
@@ -195,8 +364,42 @@ class MainView:
         plt.show()
 
     def logout(self):
-        # Distrugge i frame attuali e torna al login
-        self.sidebar.destroy()
-        self.content.destroy()
-        from views.login_view import LoginView
-        LoginView(self.master)
+        import customtkinter as ctk
+        from utils import clear_token  # importa la funzione
+
+        # Finestra modale
+        modal = ctk.CTkToplevel(self.master)
+        modal.title("Conferma Logout")
+        modal.geometry("400x250")
+        modal.grab_set()
+        modal.resizable(False, False)
+        set_app_icon(modal)
+
+        # Titolo
+        ctk.CTkLabel(modal, text="⚠️ Sei sicuro di voler uscire?", 
+                    font=("Arial", 20, "bold"), text_color="#ff5555").pack(pady=(30, 10))
+
+        # Messaggio
+        ctk.CTkLabel(modal, text="Verrai mandato alla pagina di Login.", 
+                    font=("Arial", 14), text_color="#ffffff").pack(pady=(5, 20))
+
+        # Funzione di conferma
+        def conferma():
+            clear_token()  # cancella la sessione salvata
+            modal.destroy()
+            self.sidebar.destroy()
+            self.content.destroy()
+            from views.login_view import LoginView
+            LoginView(self.master)
+
+        # Pulsanti
+        buttons_frame = ctk.CTkFrame(modal, fg_color="transparent")
+        buttons_frame.pack(pady=10)
+
+        ctk.CTkButton(buttons_frame, text="✅ Conferma", command=conferma,
+                    width=150, fg_color="#e63946", hover_color="#ff4d5a").grid(row=0, column=0, padx=10)
+
+        ctk.CTkButton(buttons_frame, text="❌ Annulla", command=modal.destroy,
+                    width=150, fg_color="#888888", hover_color="#aaaaaa").grid(row=0, column=1, padx=10)
+
+

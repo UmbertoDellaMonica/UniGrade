@@ -1,5 +1,9 @@
 import hashlib
 import os
+import customtkinter as ctk
+import json
+import os
+
 
 # Hash Password - UniGrade Application
 def hash_password(password):
@@ -16,10 +20,6 @@ def set_app_icon(window):
 
 
 
-
-
-import customtkinter as ctk
-
 def show_temp_message(parent, text, color="green", duration=2000):
     """
     Mostra un messaggio temporaneo che scompare automaticamente.
@@ -35,3 +35,23 @@ def show_temp_message(parent, text, color="green", duration=2000):
 
     # dopo `duration` millisecondi distrugge il messaggio
     parent.after(duration, msg.destroy)
+
+
+TOKEN_FILE = "session.token"
+
+def save_token(token: str):
+    """Salva il token JWT su file locale"""
+    with open(TOKEN_FILE, "w") as f:
+        f.write(token)
+
+def load_token() -> str | None:
+    """Carica il token JWT dal file, se presente"""
+    if os.path.exists(TOKEN_FILE):
+        with open(TOKEN_FILE, "r") as f:
+            return f.read().strip()
+    return None
+
+def clear_token():
+    """Rimuove il file del token JWT"""
+    if os.path.exists(TOKEN_FILE):
+        os.remove(TOKEN_FILE)
