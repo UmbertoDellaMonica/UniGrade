@@ -12,3 +12,11 @@ Con UniGrade puoi:
 * Personalizzare il valore numerico del **30L**
 * Visualizzare e organizzare il tuo libretto in un’interfaccia grafica semplice e intuitiva
 
+
+### Build - Only Developers 
+
+Per poter effettuare una build del programma una volta modificato , basti scrivere questo comando sul terminale :
+
+```sh
+pyinstaller --onefile --windowed --icon=assets/unigrade-logo-icon.ico --add-data "assets;assets" app.py --name UniGrade
+```

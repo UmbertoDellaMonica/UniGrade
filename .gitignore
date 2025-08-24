@@ -1,4 +1,14 @@
+# Python Environment 
 unigrade-env
-unigrade.db
 
+# Database - App
+unigrade.db
+# Session JWT local token to have auto login action 
 session.token
+
+# Distribution - application
+dist/
+build/
+
+__pycache__
+*.pyc

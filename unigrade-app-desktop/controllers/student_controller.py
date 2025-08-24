@@ -14,6 +14,20 @@ def get_students():
     return students
 
 
+def get_student(student_id):
+    """Restituisce uno studente per id"""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM students WHERE id=?",
+        (student_id,)
+    )
+    student = cur.fetchone()
+    conn.close()
+    return student
+
+
+
 def get_student_by_matricola(matricola_id):
     """Restituisce uno studente per id"""
     conn = get_connection()

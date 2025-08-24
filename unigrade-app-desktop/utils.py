@@ -2,21 +2,33 @@ import hashlib
 import os
 import customtkinter as ctk
 import json
-import os
+import os, sys
 
 
 # Hash Password - UniGrade Application
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
+
+
+def resource_path(relative_path):
+    """Ritorna il path assoluto di un file, anche dentro il bundle PyInstaller"""
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+
 # Icon Logo 
 def set_app_icon(window):
     """Imposta l'icona per una finestra Tk/CTk"""
-    icon_path = os.path.join("assets", "unigrade-logo-icon.ico")
+    icon_path = resource_path("assets/unigrade-logo-icon.ico")  # usa resource_path
     try:
         window.iconbitmap(icon_path)
     except Exception as e:
         print(f"[WARN] Impossibile impostare l'icona: {e}")
+
 
 
 
