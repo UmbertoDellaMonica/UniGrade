@@ -10,7 +10,6 @@ def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 
-
 def resource_path(relative_path):
     """Ritorna il path assoluto di un file, anche dentro il bundle PyInstaller"""
     try:
@@ -20,7 +19,7 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-# Icon Logo 
+# Icon Logo
 def set_app_icon(window):
     """Imposta l'icona per una finestra Tk/CTk"""
     icon_path = resource_path("assets/unigrade-logo-icon.ico")  # usa resource_path
@@ -30,12 +29,10 @@ def set_app_icon(window):
         print(f"[WARN] Impossibile impostare l'icona: {e}")
 
 
-
-
 def show_temp_message(parent, text, color="green", duration=2000):
     """
     Mostra un messaggio temporaneo centrato in alto che scompare automaticamente.
-    
+
     Args:
         parent: il widget padre (di solito un frame o la root)
         text: testo del messaggio
@@ -43,8 +40,13 @@ def show_temp_message(parent, text, color="green", duration=2000):
         duration: tempo in ms prima che scompaia (default 2000ms = 2s)
     """
     msg = ctk.CTkLabel(
-        parent, text=text, fg_color=color, text_color="white",
-        corner_radius=10, padx=10, pady=5
+        parent,
+        text=text,
+        fg_color=color,
+        text_color="white",
+        corner_radius=10,
+        padx=10,
+        pady=5,
     )
     # Appare sempre in alto, centrato orizzontalmente
     msg.place(relx=0.5, rely=0.02, anchor="n")  # più vicino al bordo superiore
@@ -52,14 +54,17 @@ def show_temp_message(parent, text, color="green", duration=2000):
     # dopo `duration` millisecondi distrugge il messaggio
     parent.after(duration, msg.destroy)
 
+
 ##################### TOKEN - Service #####################
 
 TOKEN_FILE = "session.token"
+
 
 def save_token(token: str):
     """Salva il token JWT su file locale"""
     with open(TOKEN_FILE, "w") as f:
         f.write(token)
+
 
 def load_token() -> str | None:
     """Carica il token JWT dal file, se presente"""
@@ -67,6 +72,7 @@ def load_token() -> str | None:
         with open(TOKEN_FILE, "r") as f:
             return f.read().strip()
     return None
+
 
 def clear_token():
     """Rimuove il file del token JWT"""

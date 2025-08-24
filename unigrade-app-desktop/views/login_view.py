@@ -101,14 +101,9 @@ class LoginView:
     # Check students credentials with the logic of JWT token
     def login_with_hash(self, matricola, pw_hash):
 
-        print("Credenziali passate : ")
-        print(matricola)
-        print(pw_hash)
         # Fetch Student from Database
         student = get_student_by_matricola(matricola)  # recupera utente dal DB
-        print(f"Studente ottenuto : {student}")
         if student and student["password"] == pw_hash:
-            print(" Studente con ID :")
             return student["id"]
 
         return None
@@ -126,11 +121,7 @@ class LoginView:
         matricola = decoded["matricola"]
         pw_hash = decoded["pw_hash"]
 
-        print(f"Matricola from Token : {matricola}")
-        print(f"Password Hashed from Token : {pw_hash}")
-
         # Check students with Hash Password on Database
-        print("Sto per effettuare il check del Password Hashata ")
         student_id = self.login_with_hash(matricola, pw_hash)
 
         if student_id:

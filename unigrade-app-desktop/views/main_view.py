@@ -1,5 +1,4 @@
 import customtkinter as ctk
-
 from utils import set_app_icon
 
 
@@ -8,15 +7,23 @@ class MainView:
         self.master = master
         self.student_id = student_id
 
+        # --- Container principale della MainView ---
+        self.container = ctk.CTkFrame(master)
+        self.container.pack(fill="both", expand=True)
+
+        # Sidebar
         self.sidebar = ctk.CTkFrame(
-            master, width=200, corner_radius=0, fg_color="#11111b"
+            self.container, width=200, corner_radius=0, fg_color="#11111b"
         )
         self.sidebar.pack(side="left", fill="y")
 
-        self.content = ctk.CTkFrame(master, corner_radius=20, fg_color="#2e2e3e")
+        # Content
+        self.content = ctk.CTkFrame(
+            self.container, corner_radius=20, fg_color="#2e2e3e"
+        )
         self.content.pack(side="right", expand=True, fill="both", padx=20, pady=20)
 
-        # Header frame per icona refresh
+        # Header frame per icona refresh (se vuoi usarlo nella content)
         self.header_frame = ctk.CTkFrame(
             self.content, fg_color="transparent", height=40
         )
@@ -51,7 +58,7 @@ class MainView:
 
     def logout(self):
         import customtkinter as ctk
-        from utils import clear_token  # importa la funzione
+        from utils import set_app_icon  # icona finestra
 
         # Finestra modale
         modal = ctk.CTkToplevel(self.master)
@@ -72,20 +79,19 @@ class MainView:
         # Messaggio
         ctk.CTkLabel(
             modal,
-            text="Verrai mandato alla pagina di Login.",
+            text="Verrai mandato alla Home Page.",
             font=("Arial", 14),
             text_color="#ffffff",
         ).pack(pady=(5, 20))
 
         # Funzione di conferma
         def conferma():
-            # clear_token()  # cancella la sessione salvata
+            # clear_token()  # se vuoi mantenere le credenziali, lascia commentato
             modal.destroy()
-            self.sidebar.destroy()
-            self.content.destroy()
-            from views.login_view import LoginView
+            self.container.destroy()  # elimina tutta la MainView
+            from app import HomePage
 
-            LoginView(self.master)
+            HomePage(self.master)  # mostra la HomePage
 
         # Pulsanti
         buttons_frame = ctk.CTkFrame(modal, fg_color="transparent")

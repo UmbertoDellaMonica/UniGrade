@@ -3,6 +3,7 @@ from controllers.auth_controller import register
 from views.login_view import LoginView
 from utils import show_temp_message  # import della funzione toast
 
+
 class RegisterView:
     def __init__(self, master, previous_view=None):
         self.master = master
@@ -15,36 +16,48 @@ class RegisterView:
         # Titolo
         ctk.CTkLabel(
             self.frame, text="Crea il tuo account", font=("Arial", 24, "bold")
-        ).grid(row=0, column=0, columnspan=2, pady=(20,40))
+        ).grid(row=0, column=0, columnspan=2, pady=(20, 40))
 
         # Campi
         self.entries = {}
-        self.labels = ["Nome", "Cognome", "Corso (Triennale/Magistrale)", "Matricola", "Password"]
+        self.labels = [
+            "Nome",
+            "Cognome",
+            "Corso (Triennale/Magistrale)",
+            "Matricola",
+            "Password",
+        ]
         for i, lbl in enumerate(self.labels):
             ctk.CTkLabel(self.frame, text=lbl, font=("Arial", 14)).grid(
-                row=i+1, column=0, sticky="e", padx=(20,10), pady=10
+                row=i + 1, column=0, sticky="e", padx=(20, 10), pady=10
             )
             ent = ctk.CTkEntry(
                 self.frame, show="*" if "Password" in lbl else None, width=250
             )
-            ent.grid(row=i+1, column=1, sticky="w", padx=(10,20), pady=10)
+            ent.grid(row=i + 1, column=1, sticky="w", padx=(10, 20), pady=10)
             self.entries[lbl] = ent
 
         # Bottone conferma
         ctk.CTkButton(
             self.frame, text="Conferma", command=self.do_register, width=200
-        ).grid(row=len(self.labels)+1, column=0, columnspan=2, pady=(30,10))
+        ).grid(row=len(self.labels) + 1, column=0, columnspan=2, pady=(30, 10))
 
         # Bottone Back
         ctk.CTkButton(
-            self.frame, text="Indietro", command=self.go_back, width=200, fg_color="#888888"
-        ).grid(row=len(self.labels)+2, column=0, columnspan=2, pady=(5,20))
+            self.frame,
+            text="Indietro",
+            command=self.go_back,
+            width=200,
+            fg_color="#888888",
+        ).grid(row=len(self.labels) + 2, column=0, columnspan=2, pady=(5, 20))
 
     def do_register(self):
         # Validazione campi
         for lbl in self.labels:
             if not self.entries[lbl].get().strip():
-                show_temp_message(self.frame, f"⚠️ Il campo '{lbl}' non può essere vuoto!", color="red")
+                show_temp_message(
+                    self.frame, f"⚠️ Il campo '{lbl}' non può essere vuoto!", color="red"
+                )
                 return
 
         # Tentativo registrazione
@@ -53,11 +66,13 @@ class RegisterView:
             self.entries["Cognome"].get().strip(),
             self.entries["Corso (Triennale/Magistrale)"].get().strip(),
             self.entries["Matricola"].get().strip(),
-            self.entries["Password"].get().strip()
+            self.entries["Password"].get().strip(),
         )
 
         if success:
-            show_temp_message(self.frame, "✅ Registrazione completata con successo!", color="green")
+            show_temp_message(
+                self.frame, "✅ Registrazione completata con successo!", color="green"
+            )
             self.master.after(1500, self.go_back)  # torna indietro dopo 1.5s
         else:
             show_temp_message(self.frame, "❌ Matricola già registrata!", color="red")
@@ -67,4 +82,6 @@ class RegisterView:
         if self.previous_view:
             self.previous_view()
         else:
-            LoginView(self.master)
+            from app import HomePage  # import locale, evita circular import
+
+            HomePage(self.master)
