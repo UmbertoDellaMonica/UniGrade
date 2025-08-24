@@ -2,10 +2,12 @@ import sqlite3
 
 DB_NAME = "unigrade.db"
 
+
 def init_db():
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("""
+    cur.execute(
+        """
     CREATE TABLE IF NOT EXISTS students (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT,
@@ -14,8 +16,10 @@ def init_db():
         matricola TEXT UNIQUE,
         password TEXT
     )
-    """)
-    cur.execute("""
+    """
+    )
+    cur.execute(
+        """
     CREATE TABLE IF NOT EXISTS exams (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         student_id INTEGER,
@@ -24,9 +28,11 @@ def init_db():
         cfu INTEGER,
         FOREIGN KEY(student_id) REFERENCES students(id)
     )
-    """)
+    """
+    )
     conn.commit()
     conn.close()
+
 
 def get_connection():
     """Restituisce una connessione SQLite con row_factory per ottenere dizionari"""

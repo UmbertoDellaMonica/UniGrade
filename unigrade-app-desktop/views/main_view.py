@@ -1,11 +1,6 @@
 import customtkinter as ctk
-from tkinter import messagebox
-from controllers.exam_controller import get_exams
 
 from utils import set_app_icon
-
-
-import matplotlib.pyplot as plt
 
 
 class MainView:
@@ -13,14 +8,21 @@ class MainView:
         self.master = master
         self.student_id = student_id
 
-        # Sidebar
         self.sidebar = ctk.CTkFrame(
             master, width=200, corner_radius=0, fg_color="#11111b"
         )
         self.sidebar.pack(side="left", fill="y")
+
         self.content = ctk.CTkFrame(master, corner_radius=20, fg_color="#2e2e3e")
         self.content.pack(side="right", expand=True, fill="both", padx=20, pady=20)
 
+        # Header frame per icona refresh
+        self.header_frame = ctk.CTkFrame(
+            self.content, fg_color="transparent", height=40
+        )
+        self.header_frame.pack(fill="x", pady=(0, 10))
+
+        # Sidebar buttons
         buttons = [
             ("🏠 Dashboard", self.show_dashboard),
             ("📚 Libretto", self.show_libretto),
@@ -77,7 +79,7 @@ class MainView:
 
         # Funzione di conferma
         def conferma():
-            clear_token()  # cancella la sessione salvata
+            # clear_token()  # cancella la sessione salvata
             modal.destroy()
             self.sidebar.destroy()
             self.content.destroy()

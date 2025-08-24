@@ -118,7 +118,6 @@ class LibrettoView(ctk.CTkFrame):
             hover_color="#ff6666",
         ).pack(side="left", padx=10, pady=5)
 
-    # --- Metodi di gestione esami ---
     def load_exams(self):
         for i in self.tree.get_children():
             self.tree.delete(i)
@@ -127,10 +126,21 @@ class LibrettoView(ctk.CTkFrame):
         total_weighted = 0
         total_cfu = 0
         for e in exams:
-            stato = "Passato ✅" if e[2] >= 18 else "Non superato ❌"
-            self.tree.insert("", "end", iid=e[0], values=(e[1], e[2], e[3], stato))
-            total_weighted += e[2] * e[3]
-            total_cfu += e[3]
+            voto = e[2]
+            cfu = e[3]
+
+            if voto is None:
+                stato = "In attesa ⏳"
+                voto_display = "-"  # mostriamo un trattino al posto del voto
+            else:
+                stato = "Passato ✅" if voto >= 18 else "Non superato ❌"
+                voto_display = voto
+                total_weighted += voto * cfu
+                total_cfu += cfu
+
+            self.tree.insert(
+                "", "end", iid=e[0], values=(e[1], voto_display, cfu, stato)
+            )
 
         self.total_weighted = total_weighted
         self.total_cfu = total_cfu
@@ -194,20 +204,40 @@ class LibrettoView(ctk.CTkFrame):
         # Funzione di conferma
         def conferma():
             nome = entry_nome.get().strip()
+            voto_text = entry_voto.get().strip()
+            cfu_text = entry_cfu.get().strip()
+
+            # Controllo CFU
             try:
-                voto = int(entry_voto.get())
-                cfu = int(entry_cfu.get())
+                cfu = int(cfu_text)
+                if cfu <= 0:
+                    msg_label.configure(text="CFU deve essere un numero positivo!")
+                    return
             except ValueError:
-                msg_label.configure(text="Voto e CFU devono essere numeri!")
+                msg_label.configure(text="CFU deve essere un numero!")
                 return
 
-            if not nome or voto < 18 or voto > 30 or cfu <= 0:
-                msg_label.configure(text="Controlla i valori inseriti!")
+            # Controllo voto (opzionale)
+            voto = None
+            if voto_text:  # se non è vuoto
+                try:
+                    voto = int(voto_text)
+                    if voto < 18 or voto > 30:
+                        msg_label.configure(text="Il voto deve essere tra 18 e 30!")
+                        return
+                except ValueError:
+                    msg_label.configure(text="Il voto deve essere un numero valido!")
+                    return
+
+            if not nome:
+                msg_label.configure(text="Inserisci il nome dell'esame!")
                 return
 
+            # Inserimento nel DB (voto può essere None)
             add_exam(self.student_id, nome, voto, cfu)
             self.load_exams()
             modal.destroy()
+
             # Breve messaggio di successo
             success = ctk.CTkLabel(
                 self.master,
