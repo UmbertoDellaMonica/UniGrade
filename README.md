@@ -1,5 +1,4 @@
 
-
 ### 📚 UniGrade
 
 **UniGrade** è un’applicazione pensata per studenti universitari che vogliono gestire il proprio libretto digitale e calcolare la **media ponderata** dei voti in base ai CFU.
@@ -12,8 +11,7 @@ Con UniGrade puoi:
 * Personalizzare il valore numerico del **30L**
 * Visualizzare e organizzare il tuo libretto in un’interfaccia grafica semplice e intuitiva
 
-
-### Build - Only Developers 
+### Build - Only Developers
 
 Per poter effettuare una build del programma una volta modificato , basti scrivere questo comando sul terminale :
 
