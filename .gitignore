@@ -1,2 +1,4 @@
 unigrade-env
 unigrade.db
+
+session.token

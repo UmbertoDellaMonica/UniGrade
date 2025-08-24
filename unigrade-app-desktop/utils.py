@@ -22,7 +22,7 @@ def set_app_icon(window):
 
 def show_temp_message(parent, text, color="green", duration=2000):
     """
-    Mostra un messaggio temporaneo che scompare automaticamente.
+    Mostra un messaggio temporaneo centrato in alto che scompare automaticamente.
     
     Args:
         parent: il widget padre (di solito un frame o la root)
@@ -30,12 +30,17 @@ def show_temp_message(parent, text, color="green", duration=2000):
         color: colore sfondo (es. "green", "red", "#ffaa00")
         duration: tempo in ms prima che scompaia (default 2000ms = 2s)
     """
-    msg = ctk.CTkLabel(parent, text=text, fg_color=color, text_color="white", corner_radius=10, padx=10, pady=5)
-    msg.place(relx=0.5, rely=0.05, anchor="n")  # appare in alto, centrato
+    msg = ctk.CTkLabel(
+        parent, text=text, fg_color=color, text_color="white",
+        corner_radius=10, padx=10, pady=5
+    )
+    # Appare sempre in alto, centrato orizzontalmente
+    msg.place(relx=0.5, rely=0.02, anchor="n")  # più vicino al bordo superiore
 
     # dopo `duration` millisecondi distrugge il messaggio
     parent.after(duration, msg.destroy)
 
+##################### TOKEN - Service #####################
 
 TOKEN_FILE = "session.token"
 

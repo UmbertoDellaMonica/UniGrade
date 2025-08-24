@@ -3,6 +3,9 @@ from tkinter import ttk, simpledialog, messagebox
 from controllers.exam_controller import get_exams, add_exam, update_exam, remove_exam
 from utils import set_app_icon
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import tkinter as tk
 
 class MainView:
     def __init__(self, master, student_id):
@@ -27,9 +30,71 @@ class MainView:
         self.show_dashboard()
 
     def show_dashboard(self):
-        for w in self.content.winfo_children(): w.destroy()
-        ctk.CTkLabel(self.content, text="Benvenuto in UniGrade!", font=("Arial", 22, "bold")).pack(pady=20)
-        ctk.CTkLabel(self.content, text="Usa la sidebar per navigare.", font=("Arial", 14)).pack(pady=10)
+        # Distrugge i widget precedenti
+        for w in self.content.winfo_children(): 
+            w.destroy()
+
+        # --- Scrollable Frame principale ---
+        canvas = tk.Canvas(self.content, bg="#1c1c1c", highlightthickness=0)
+        scrollbar = ctk.CTkScrollbar(self.content, orientation="vertical", command=canvas.yview)
+        scrollable_frame = ctk.CTkFrame(canvas)
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        canvas.create_window((0,0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # --- Colonna sinistra: Avatar ---
+        avatar_frame = ctk.CTkFrame(scrollable_frame, width=200, corner_radius=15)
+        avatar_frame.pack(side="left", padx=20, pady=20, fill="y")
+        self.avatar_label = ctk.CTkLabel(avatar_frame, text="Avatar", font=("Arial", 18))
+        self.avatar_label.pack(pady=20)
+        self.avatar_img_label = ctk.CTkLabel(avatar_frame, text="(clicca per caricare foto)", width=150, height=150, fg_color="#444")
+        self.avatar_img_label.pack(pady=10)
+        # TODO: aggiungere caricamento immagine al click
+
+        # --- Card Info Utente ---
+        info_frame = ctk.CTkFrame(scrollable_frame, corner_radius=15, fg_color="#2a2a2a")
+        info_frame.pack(side="left", padx=20, pady=20, fill="both", expand=True)
+
+        # Qui dovresti recuperare i dati reali dello studente dal DB
+        nome, cognome, matricola, corso = "Mario", "Rossi", "123456", "Informatica"
+
+        ctk.CTkLabel(info_frame, text=f"{nome} {cognome}", font=("Arial", 22, "bold")).pack(pady=(20,10))
+        ctk.CTkLabel(info_frame, text=f"Matricola: {matricola}", font=("Arial", 16)).pack(pady=5)
+        ctk.CTkLabel(info_frame, text=f"Corso: {corso}", font=("Arial", 16)).pack(pady=5)
+
+        # --- Grafico dettagliato esami ---
+        exams_frame = ctk.CTkFrame(scrollable_frame, corner_radius=15, fg_color="#2a2a2a")
+        exams_frame.pack(side="left", padx=20, pady=20, fill="both", expand=True)
+
+        # Simulazione dati esami
+        exam_names = ["Matematica", "Fisica", "Informatica", "Chimica", "Letteratura"]
+        exam_scores = [28, 24, 30, 26, 27]
+        exam_cfu = [6, 6, 12, 6, 6]
+
+        # Media ponderata
+        media_ponderata = sum([s*c for s,c in zip(exam_scores, exam_cfu)]) / sum(exam_cfu)
+
+        # Grafico con matplotlib
+        fig = Figure(figsize=(6,4), dpi=100)
+        ax = fig.add_subplot(111)
+        bars = ax.bar(exam_names, exam_scores, color="#e63946")
+        ax.set_ylim(0, 30)
+        ax.set_title(f"Voti Esami - Media ponderata: {media_ponderata:.2f}", color="white")
+        ax.set_ylabel("Voto", color="white")
+        ax.set_facecolor("#2a2a2a")
+        fig.patch.set_facecolor("#1c1c1c")
+        ax.tick_params(axis='x', colors='white')
+        ax.tick_params(axis='y', colors='white')
+
+        # Visualizza grafico in CTkFrame
+        canvas_fig = FigureCanvasTkAgg(fig, master=exams_frame)
+        canvas_fig.draw()
+        canvas_fig.get_tk_widget().pack(pady=20, padx=10)
 
     def show_libretto(self):
         import tkinter as tk
