@@ -1,7 +1,7 @@
 from database import get_connection
 from utils import hash_password
-# Funzione helper per hash della password
 
+# Funzione helper per hash della password
 
 
 def get_students():
@@ -18,14 +18,10 @@ def get_student(student_id):
     """Restituisce uno studente per id"""
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute(
-        "SELECT * FROM students WHERE id=?",
-        (student_id,)
-    )
+    cur.execute("SELECT * FROM students WHERE id=?", (student_id,))
     student = cur.fetchone()
     conn.close()
     return student
-
 
 
 def get_student_by_matricola(matricola_id):
@@ -34,7 +30,7 @@ def get_student_by_matricola(matricola_id):
     cur = conn.cursor()
     cur.execute(
         "SELECT id, matricola, nome, cognome, corso, password FROM students WHERE matricola=?",
-        (matricola_id,)
+        (matricola_id,),
     )
     student = cur.fetchone()
     conn.close()
@@ -48,7 +44,7 @@ def add_student(matricola, nome, cognome, corso, password):
     pw_hash = hash_password(password)
     cur.execute(
         "INSERT INTO students (matricola, nome, cognome, corso, password) VALUES (?,?,?,?,?)",
-        (matricola, nome, cognome, corso, pw_hash)
+        (matricola, nome, cognome, corso, pw_hash),
     )
     conn.commit()
     conn.close()
@@ -81,6 +77,17 @@ def update_student(student_id, nome=None, cognome=None, corso=None, password=Non
     values.append(student_id)
     sql = f"UPDATE students SET {', '.join(fields)} WHERE id=?"
     cur.execute(sql, tuple(values))
+    conn.commit()
+    conn.close()
+
+
+def update_student_avatar(student_id, avatar_path):
+    """Aggiorna il percorso dell'avatar di uno studente"""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE students SET avatar_path = ? WHERE id = ?", (avatar_path, student_id)
+    )
     conn.commit()
     conn.close()
 

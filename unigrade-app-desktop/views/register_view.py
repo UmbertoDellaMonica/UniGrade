@@ -18,15 +18,10 @@ class RegisterView:
             self.frame, text="Crea il tuo account", font=("Arial", 24, "bold")
         ).grid(row=0, column=0, columnspan=2, pady=(20, 40))
 
-        # Campi
+        # Campi base (tranne Corso)
         self.entries = {}
-        self.labels = [
-            "Nome",
-            "Cognome",
-            "Corso (Triennale/Magistrale)",
-            "Matricola",
-            "Password",
-        ]
+        self.labels = ["Nome", "Cognome", "Matricola", "Password"]
+
         for i, lbl in enumerate(self.labels):
             ctk.CTkLabel(self.frame, text=lbl, font=("Arial", 14)).grid(
                 row=i + 1, column=0, sticky="e", padx=(20, 10), pady=10
@@ -37,10 +32,34 @@ class RegisterView:
             ent.grid(row=i + 1, column=1, sticky="w", padx=(10, 20), pady=10)
             self.entries[lbl] = ent
 
+        # Selezione Corso (dropdown)
+        ctk.CTkLabel(self.frame, text="Corso di Laurea", font=("Arial", 14)).grid(
+            row=len(self.labels) + 1, column=0, sticky="e", padx=(20, 10), pady=10
+        )
+        self.course_var = ctk.StringVar(value="Triennale")  # default
+        course_dropdown = ctk.CTkOptionMenu(
+            self.frame,
+            values=["Triennale", "Magistrale"],
+            variable=self.course_var,
+            width=250,
+        )
+        course_dropdown.grid(
+            row=len(self.labels) + 1, column=1, sticky="w", padx=(10, 20), pady=10
+        )
+
+        # Entry per Facoltà
+        ctk.CTkLabel(self.frame, text="Facoltà", font=("Arial", 14)).grid(
+            row=len(self.labels) + 2, column=0, sticky="e", padx=(20, 10), pady=10
+        )
+        self.entries["Facoltà"] = ctk.CTkEntry(self.frame, width=250)
+        self.entries["Facoltà"].grid(
+            row=len(self.labels) + 2, column=1, sticky="w", padx=(10, 20), pady=10
+        )
+
         # Bottone conferma
         ctk.CTkButton(
             self.frame, text="Conferma", command=self.do_register, width=200
-        ).grid(row=len(self.labels) + 1, column=0, columnspan=2, pady=(30, 10))
+        ).grid(row=len(self.labels) + 3, column=0, columnspan=2, pady=(30, 10))
 
         # Bottone Back
         ctk.CTkButton(
@@ -49,12 +68,12 @@ class RegisterView:
             command=self.go_back,
             width=200,
             fg_color="#888888",
-        ).grid(row=len(self.labels) + 2, column=0, columnspan=2, pady=(5, 20))
+        ).grid(row=len(self.labels) + 4, column=0, columnspan=2, pady=(5, 20))
 
     def do_register(self):
         # Validazione campi
-        for lbl in self.labels:
-            if not self.entries[lbl].get().strip():
+        for lbl, widget in self.entries.items():
+            if not widget.get().strip():
                 show_temp_message(
                     self.frame, f"⚠️ Il campo '{lbl}' non può essere vuoto!", color="red"
                 )
@@ -64,7 +83,7 @@ class RegisterView:
         success = register(
             self.entries["Nome"].get().strip(),
             self.entries["Cognome"].get().strip(),
-            self.entries["Corso (Triennale/Magistrale)"].get().strip(),
+            self.course_var.get().strip() + self.entries["Facoltà"].get().strip(),
             self.entries["Matricola"].get().strip(),
             self.entries["Password"].get().strip(),
         )

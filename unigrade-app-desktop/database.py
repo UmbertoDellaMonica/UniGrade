@@ -6,6 +6,8 @@ DB_NAME = "unigrade.db"
 def init_db():
     conn = get_connection()
     cur = conn.cursor()
+
+    # Creazione tabella students con avatar_path
     cur.execute(
         """
     CREATE TABLE IF NOT EXISTS students (
@@ -14,22 +16,26 @@ def init_db():
         cognome TEXT,
         corso TEXT,
         matricola TEXT UNIQUE,
-        password TEXT
+        password TEXT,
+        avatar_path TEXT
     )
     """
     )
+
+    # Creazione tabella exams
     cur.execute(
         """
     CREATE TABLE IF NOT EXISTS exams (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         student_id INTEGER,
         nome TEXT,
-        voto INTEGER,
+        voto TEXT,
         cfu INTEGER,
         FOREIGN KEY(student_id) REFERENCES students(id)
     )
     """
     )
+
     conn.commit()
     conn.close()
 
