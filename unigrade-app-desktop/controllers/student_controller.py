@@ -1,4 +1,4 @@
-from database import get_connection
+from configuration.database_configuration import get_connection
 from utils import hash_password
 
 # Funzione helper per hash della password

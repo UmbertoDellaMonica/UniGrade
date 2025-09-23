@@ -83,7 +83,7 @@ class RegisterView:
         success = register(
             self.entries["Nome"].get().strip(),
             self.entries["Cognome"].get().strip(),
-            self.course_var.get().strip() + self.entries["Facoltà"].get().strip(),
+            self.course_var.get().strip() + " " + self.entries["Facoltà"].get().strip(),
             self.entries["Matricola"].get().strip(),
             self.entries["Password"].get().strip(),
         )

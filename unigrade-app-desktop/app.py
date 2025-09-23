@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from database import init_db
+from configuration.database_configuration import init_db
 from views.login_view import LoginView
 from views.register_view import RegisterView
 from utils import set_app_icon
@@ -82,9 +82,6 @@ class HomePage(ctk.CTkFrame):
         RegisterView(self.master)
 
 
-# -----------------------------
-# Avvio principale dell'app
-# -----------------------------
 if __name__ == "__main__":
     init_db()
     ctk.set_appearance_mode("dark")
@@ -92,13 +89,20 @@ if __name__ == "__main__":
 
     root = ctk.CTk()
 
-    # Adatta finestra alle dimensioni dello schermo
+    # Ottieni le dimensioni dello schermo
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
-    width = screen_width - 100
-    height = screen_height - 100
-    root.geometry(f"{width}x{height}+50+50")
+
+    # Imposta la finestra alla dimensione massima dello schermo
+    root.geometry(f"{screen_width}x{screen_height}+0+0")
+    root.minsize(800, 600)  # facoltativo: dimensione minima
+
+    # Rimuovi margini interni
+    root.grid_rowconfigure(0, weight=1)
+    root.grid_columnconfigure(0, weight=1)
 
     # Avvia HomePage
-    HomePage(root)
+    homepage = HomePage(root)
+    homepage.grid(row=0, column=0, sticky="nsew")
+
     root.mainloop()

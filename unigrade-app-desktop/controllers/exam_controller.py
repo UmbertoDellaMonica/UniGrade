@@ -1,4 +1,4 @@
-from database import get_connection
+from configuration.database_configuration import get_connection
 
 
 def get_exams(student_id):
