@@ -30,7 +30,7 @@ class ExamsTable(ctk.CTkFrame):
         tree_frame.pack(fill="both", expand=True, padx=10, pady=(10, 10))
 
         # Treeview
-        self.tree = ttk.Treeview(tree_frame, columns=cols, show="s", height=12)
+        self.tree = ttk.Treeview(tree_frame, columns=cols, show="", height=12)
 
         # Stile moderno
         style = ttk.Style()
