@@ -1,8 +1,9 @@
 import customtkinter as ctk
 from configuration.database_configuration import init_db
-from views.login_view import LoginView
-from views.register_view import RegisterView
-from utils import set_app_icon
+from views.login.login_view import LoginView
+from views.register.register_view import RegisterView
+from configuration.unigrade_configuration import set_app_icon
+from configuration.unigrade_configuration import APP_NAME
 
 
 class HomePage(ctk.CTkFrame):
@@ -11,7 +12,7 @@ class HomePage(ctk.CTkFrame):
         self.pack(fill="both", expand=True)
         self.master = master
 
-        master.title("UniGrade - Libretto Universitario Digitale")
+        master.title(f"{APP_NAME} - Libretto Universitario Digitale")
         set_app_icon(master)
 
         # --- Sfondo principale ---
@@ -25,7 +26,7 @@ class HomePage(ctk.CTkFrame):
         # --- Logo / titolo stilizzato ---
         self.title_label = ctk.CTkLabel(
             self.center_frame,
-            text="UniGrade",
+            text=f"{APP_NAME}",
             font=("Arial", 48, "bold"),
             text_color="#4da6ff",
         )

@@ -1,5 +1,5 @@
 from configuration.database_configuration import get_connection
-from utils import hash_password
+from configuration.database_configuration import hash_password
 
 
 def login(matricola, password):

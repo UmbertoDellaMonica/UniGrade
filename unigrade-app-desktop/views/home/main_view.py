@@ -1,5 +1,6 @@
 import customtkinter as ctk
-from utils import set_app_icon, clear_token
+from configuration.unigrade_configuration import set_app_icon
+from configuration.unigrade_token_configuration import clear_token
 
 
 class MainView:

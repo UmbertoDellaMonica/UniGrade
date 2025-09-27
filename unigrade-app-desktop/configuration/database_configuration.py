@@ -1,5 +1,11 @@
 import sqlite3
+import hashlib
 from configuration.unigrade_configuration import DB_NAME
+
+
+# Hash Password - UniGrade Application
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
 
 
 def init_db():

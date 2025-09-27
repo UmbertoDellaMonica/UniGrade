@@ -1,9 +1,9 @@
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox
-from PIL import Image, ImageTk
+from PIL import Image
 from controllers.exam_controller import get_exams, add_exam, update_exam, remove_exam
-from utils import resource_path, set_app_icon
+from configuration.unigrade_configuration import resource_path, set_app_icon
 
 
 class LibrettoView(ctk.CTkFrame):

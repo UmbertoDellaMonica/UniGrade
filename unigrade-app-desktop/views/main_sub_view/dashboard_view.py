@@ -3,9 +3,8 @@ import tkinter as tk
 from controllers.student_controller import get_student
 from controllers.exam_controller import get_exams
 from views.main_sub_view.avatar_view import AvatarComponent
-from PIL import Image, ImageTk
-from utils import resource_path
-from matplotlib.figure import Figure
+from PIL import Image
+from configuration.unigrade_configuration import resource_path
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 
