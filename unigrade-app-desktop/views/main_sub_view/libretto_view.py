@@ -13,28 +13,106 @@ class LibrettoView(ctk.CTkFrame):
         self.student_id = student_id
         self.pack(fill="both", expand=True)
 
-        # Header principale
-        ctk.CTkLabel(self, text="📚 Libretto Esami", font=("Arial", 24, "bold")).pack(
-            pady=(10, 20)
+        # ------------------------
+        # Canvas principale + scrollbar
+        # ------------------------
+        self.canvas = tk.Canvas(self, bg="#1c1c1c", highlightthickness=0)
+        self.canvas.pack(side="left", fill="both", expand=True)
+
+        self.scrollbar = ctk.CTkScrollbar(
+            self, orientation="vertical", command=self.canvas.yview
+        )
+        self.scrollbar.pack(side="right", fill="y")
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        # Frame scrollabile
+        self.scrollable_frame = ctk.CTkFrame(self.canvas, fg_color="#1c1c1c")
+        self.canvas_window = self.canvas.create_window(
+            (0, 0), window=self.scrollable_frame, anchor="nw"
         )
 
-        # Frame principale
-        libretto_frame = ctk.CTkFrame(self, corner_radius=15, fg_color="#2e2e3e")
-        libretto_frame.pack(fill="both", expand=True, padx=20, pady=10)
+        # Aggiorna scrollregion quando cambia la dimensione del contenuto
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")),
+        )
+        self.canvas.bind("<Configure>", self._resize_scrollable_frame)
 
-        # Icone per intestazioni
+        # Bind scroll
+        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)  # Windows/Mac
+        self.canvas.bind_all("<Button-4>", self._on_mousewheel_linux_up)  # Linux up
+        self.canvas.bind_all("<Button-5>", self._on_mousewheel_linux_down)  # Linux down
+
+        # ------------------------
+        # Inizializza contenuto principale
+        # ------------------------
+        self._init_content()
+
+        # Fissa il punto di partenza dello scroll sulla label titolo
+        self.scrollable_frame.update_idletasks()
+        self.canvas.yview_moveto(0)
+
+    # ------------------------
+    # FUNZIONI SCROLL
+    # ------------------------
+    def _resize_scrollable_frame(self, event):
+        self.canvas.itemconfig(self.canvas_window, width=event.width)
+
+    def _on_mousewheel(self, event):
+        self.canvas.yview_scroll(-1 * int(event.delta / 120), "units")
+
+    def _on_mousewheel_linux_up(self, event):
+        self.canvas.yview_scroll(-1, "units")
+
+    def _on_mousewheel_linux_down(self, event):
+        self.canvas.yview_scroll(1, "units")
+
+    # ------------------------
+    # CONTENUTO PRINCIPALE
+    # ------------------------
+    def _init_content(self):
+        self._init_header()
+        self._init_treeview()
+        self._init_buttons()
+
+    # ------------------------
+    # Header: titolo principale
+    # ------------------------
+    def _init_header(self):
+        self.title_label = ctk.CTkLabel(
+            self.scrollable_frame,
+            text="📚 Libretto Esami",
+            font=("Arial", 24, "bold"),
+        )
+        self.title_label.pack(pady=(10, 0))
+
+        # Frame libretto
+        self.libretto_frame = ctk.CTkFrame(
+            self.scrollable_frame, corner_radius=15, fg_color="#2e2e3e"
+        )
+        self.libretto_frame.pack(fill="both", expand=True, padx=20, pady=(10, 0))
+
+        # Icone header
         self.icons = {
-            "exam": ImageTk.PhotoImage(
-                Image.open(resource_path("assets/icons/book.png")).resize((20, 20))
+            "exam": ctk.CTkImage(
+                light_image=Image.open(resource_path("assets/icons/book.png")),
+                dark_image=Image.open(resource_path("assets/icons/book.png")),
+                size=(20, 20),
             ),
-            "vote": ImageTk.PhotoImage(
-                Image.open(resource_path("assets/icons/star.png")).resize((20, 20))
+            "vote": ctk.CTkImage(
+                light_image=Image.open(resource_path("assets/icons/star.png")),
+                dark_image=Image.open(resource_path("assets/icons/star.png")),
+                size=(20, 20),
             ),
-            "cfu": ImageTk.PhotoImage(
-                Image.open(resource_path("assets/icons/coin.png")).resize((20, 20))
+            "cfu": ctk.CTkImage(
+                light_image=Image.open(resource_path("assets/icons/coin.png")),
+                dark_image=Image.open(resource_path("assets/icons/coin.png")),
+                size=(20, 20),
             ),
-            "status": ImageTk.PhotoImage(
-                Image.open(resource_path("assets/icons/check.png")).resize((20, 20))
+            "status": ctk.CTkImage(
+                light_image=Image.open(resource_path("assets/icons/check.png")),
+                dark_image=Image.open(resource_path("assets/icons/check.png")),
+                size=(20, 20),
             ),
         }
 
@@ -46,9 +124,10 @@ class LibrettoView(ctk.CTkFrame):
         ]
 
         # Header personalizzato
-        header_frame = ctk.CTkFrame(libretto_frame, fg_color="#2b2b3d", corner_radius=8)
+        header_frame = ctk.CTkFrame(
+            self.libretto_frame, fg_color="#2b2b3d", corner_radius=8
+        )
         header_frame.pack(fill="x", pady=(5, 0))
-
         for text, icon in headers:
             lbl = ctk.CTkLabel(
                 header_frame,
@@ -60,38 +139,88 @@ class LibrettoView(ctk.CTkFrame):
             )
             lbl.pack(side="left", expand=True, fill="x", padx=5, pady=5)
 
-        # Treeview
+    # ------------------------
+    # Treeview + Media ponderata (con scrolling interno)
+    # ------------------------
+    def _init_treeview(self):
         cols = ("Nome Esame", "Voto", "CFU", "Stato")
-        self.tree = ttk.Treeview(
-            libretto_frame, columns=cols, show="headings", height=14
-        )
 
-        # Stile tabella
+        # Frame interno con scrollbar verticale per la TreeView
+        tree_frame = ctk.CTkFrame(
+            self.libretto_frame, fg_color="#2e2e3e", corner_radius=10
+        )
+        tree_frame.pack(fill="both", expand=True, padx=10, pady=(10, 10))
+
+        # Treeview
+        self.tree = ttk.Treeview(tree_frame, columns=cols, show="", height=12)
+
+        # Stile tabella moderno
         style = ttk.Style()
         style.configure(
             "Treeview",
             background="#1e1e2f",
             foreground="white",
-            rowheight=40,
             fieldbackground="#1e1e2f",
             font=("Arial", 13),
+            rowheight=38,
         )
-        style.map("Treeview", background=[("selected", "#4da6ff")])
+        style.map(
+            "Treeview",
+            background=[("selected", "#4da6ff")],
+            foreground=[("selected", "white")],
+        )
 
+        # Colonne
         for col in cols:
             self.tree.column(col, anchor="center", width=200)
+            self.tree.heading(col, text=col)
 
-        self.tree.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+        # Scrollbar verticale
+        tree_scroll = ctk.CTkScrollbar(
+            tree_frame, orientation="vertical", command=self.tree.yview
+        )
+        self.tree.configure(yscrollcommand=tree_scroll.set)
+        tree_scroll.pack(side="right", fill="y")
+        self.tree.pack(side="left", fill="both", expand=True)
 
-        # Label media ponderata (ed eventualmente aritmetica se vuoi mostrarla)
-        self.avg_label = ctk.CTkLabel(self, text="", font=("Arial", 15, "bold"))
+        # Alternanza colore righe
+        def style_rows(event):
+            for i, row in enumerate(self.tree.get_children()):
+                if i % 2 == 0:
+                    self.tree.item(row, tags=("even",))
+                else:
+                    self.tree.item(row, tags=("odd",))
+
+        self.tree.tag_configure("even", background="#1e1e2f")
+        self.tree.tag_configure("odd", background="#29293f")
+        self.tree.bind("<Configure>", style_rows)
+
+        # Blocca scroll globale quando il mouse è sopra la TreeView
+        def block_global_scroll(event):
+            self.canvas.unbind_all("<MouseWheel>")
+
+        def restore_global_scroll(event):
+            self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+
+        self.tree.bind("<Enter>", block_global_scroll)
+        self.tree.bind("<Leave>", restore_global_scroll)
+
+        # Label media ponderata
+        self.avg_label = ctk.CTkLabel(
+            self.scrollable_frame, text="", font=("Arial", 15, "bold")
+        )
         self.avg_label.pack(pady=(10, 0))
 
         # Carica dati esami
         self.load_exams()
 
-        # Bottoni
-        btn_frame = ctk.CTkFrame(self, corner_radius=10, fg_color="#222233")
+    # ------------------------
+    # Bottoni Aggiungi/Modifica/Rimuovi
+    # ------------------------
+    def _init_buttons(self):
+        btn_frame = ctk.CTkFrame(
+            self.scrollable_frame, corner_radius=10, fg_color="#222233"
+        )
         btn_frame.pack(pady=15, padx=20, fill="x")
 
         ctk.CTkButton(
@@ -102,6 +231,7 @@ class LibrettoView(ctk.CTkFrame):
             fg_color="#4da6ff",
             hover_color="#66b3ff",
         ).pack(side="left", padx=10, pady=5)
+
         ctk.CTkButton(
             btn_frame,
             text="✏️ Modifica",
@@ -110,6 +240,7 @@ class LibrettoView(ctk.CTkFrame):
             fg_color="#ffb84d",
             hover_color="#ffc966",
         ).pack(side="left", padx=10, pady=5)
+
         ctk.CTkButton(
             btn_frame,
             text="🗑️ Rimuovi",
@@ -270,19 +401,22 @@ class LibrettoView(ctk.CTkFrame):
                     return
 
             # Chiamata controller
-            add_exam(self.student_id, nome, voto, cfu)
-            self.load_exams()
-            modal.destroy()
+            success = add_exam(self.student_id, nome, voto, cfu)
+            if success:
+                self.load_exams()
+                modal.destroy()
 
-            # Messaggio di successo
-            success = ctk.CTkLabel(
-                self.master,
-                text="✅ Esame aggiunto!",
-                font=("Arial", 14, "bold"),
-                text_color="#4dd17f",
-            )
-            success.place(relx=0.5, rely=0.95, anchor="s")
-            self.master.after(2000, success.destroy)
+                # Messaggio di successo
+                msg = ctk.CTkLabel(
+                    self.master,
+                    text="✅ Esame aggiunto!",
+                    font=("Arial", 14, "bold"),
+                    text_color="#4dd17f",
+                )
+                msg.place(relx=0.5, rely=0.95, anchor="s")
+                self.master.after(2000, msg.destroy)
+            else:
+                msg_label.configure(text=f"L'esame '{nome}' è già presente!")
 
         # Pulsanti
         ctk.CTkButton(

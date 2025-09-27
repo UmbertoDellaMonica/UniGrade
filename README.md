@@ -161,4 +161,5 @@ This project is licensed under the **AGPLv3 License** – see the [LICENSE](LICE
 Questo progetto è rilasciato sotto licenza **AGPLv3** – vedi il file [LICENSE](LICENSE) per i dettagli.
 
 </details>
+
 ---

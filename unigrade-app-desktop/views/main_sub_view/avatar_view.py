@@ -1,18 +1,12 @@
 import customtkinter as ctk
-import tkinter as tk
-import mplcursors
-from controllers.student_controller import get_student, update_student_avatar
-from controllers.exam_controller import get_exams
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from PIL import Image, ImageTk, ImageDraw
+from PIL import Image, ImageDraw
 from customtkinter import CTkImage
 from tkinter import filedialog
-from utils import resource_path
+from controllers.student_controller import update_student_avatar
 
 
 class AvatarComponent:
-    """Gestione caricamento e visualizzazione avatar studente con UI moderna"""
+    """Avatar studente semplice, compatibile con pack"""
 
     def __init__(self, parent_frame, student_id, avatar_path=None):
         self.parent_frame = parent_frame
@@ -25,6 +19,7 @@ class AvatarComponent:
             self.display_avatar(self.avatar_path)
 
     def init_avatar_frame(self):
+        # Frame principale dell'avatar
         self.avatar_frame = ctk.CTkFrame(
             self.parent_frame,
             corner_radius=20,
@@ -32,20 +27,20 @@ class AvatarComponent:
             border_width=2,
             border_color="#444",
         )
-        self.avatar_frame.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
+        self.avatar_frame.pack(fill="x", padx=20, pady=20)
 
-        # Titolo
+        # Label titolo
         self.avatar_label = ctk.CTkLabel(
             self.avatar_frame,
             text="Avatar Studente",
             font=("Arial", 16, "bold"),
             text_color="#4da6ff",
             fg_color="#1c1c1c",
-            corner_radius=10,
-            padx=10,
             pady=5,
+            padx=10,
+            corner_radius=10,
         )
-        self.avatar_label.grid(row=0, column=0, pady=(15, 10))
+        self.avatar_label.pack(pady=(10, 10))
 
         # Label immagine
         self.avatar_img_label = ctk.CTkLabel(
@@ -58,7 +53,7 @@ class AvatarComponent:
             text_color="#aaa",
             font=("Arial", 14, "italic"),
         )
-        self.avatar_img_label.grid(row=1, column=0, pady=10)
+        self.avatar_img_label.pack(pady=10)
         self.avatar_img_label.bind("<Button-1>", self.upload_avatar)
         self.avatar_img_label.bind("<Enter>", self.on_hover)
         self.avatar_img_label.bind("<Leave>", self.on_leave)
@@ -81,7 +76,6 @@ class AvatarComponent:
         )
         self.avatar_img_label.configure(image=self.avatar_img, text="")
 
-        # Bordi colorati se l'avatar è presente
         self.avatar_frame.configure(border_color="#4da6ff")
 
     def upload_avatar(self, event=None):
@@ -97,9 +91,6 @@ class AvatarComponent:
         update_student_avatar(self.student_id, file_path)
         self.animate_click()
 
-    # -------------------------
-    # Hover animation
-    # -------------------------
     def on_hover(self, event):
         self.avatar_img_label.configure(fg_color="#4da6ff", text_color="#fff")
 
@@ -109,9 +100,6 @@ class AvatarComponent:
         else:
             self.avatar_img_label.configure(fg_color="#444", text_color="#aaa")
 
-    # -------------------------
-    # Click bounce animation
-    # -------------------------
     def animate_click(self):
         def shrink():
             self.avatar_img_label.configure(width=160, height=160)

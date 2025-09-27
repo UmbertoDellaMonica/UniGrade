@@ -1,13 +1,15 @@
 import customtkinter as ctk
 import tkinter as tk
-import mplcursors
 from controllers.student_controller import get_student
 from controllers.exam_controller import get_exams
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from views.main_sub_view.avatar_view import AvatarComponent
 from PIL import Image, ImageTk
 from utils import resource_path
-from views.main_sub_view.avatar_view import AvatarComponent
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
+
+import mplcursors
 
 
 class DashboardView(ctk.CTkFrame):
@@ -15,7 +17,6 @@ class DashboardView(ctk.CTkFrame):
         super().__init__(master)
         self.pack(fill="both", expand=True)
         self.student_id = student_id
-        self.refreshing = False
 
         # --- Dati studente ---
         self.student = get_student(student_id) or {
@@ -26,38 +27,83 @@ class DashboardView(ctk.CTkFrame):
             "avatar_path": None,
         }
 
-        # --- Canvas scrollabile globale ---
+        # --- Canvas principale con scrollbar ---
+        self._init_scrollable_canvas()
+
+        # --- Header row: Avatar + Info Studente + Refresh ---
+        self._init_header_row()
+
+        # --- Exam Chart ---
+        self._init_exam_chart()
+
+        # --- Dummy content aggiuntivo ---
+        # self._populate_dummy_elements()
+
+    # ------------------------
+    # Canvas scrollabile
+    # ------------------------
+    def _init_scrollable_canvas(self):
         self.canvas = tk.Canvas(self, bg="#1c1c1c", highlightthickness=0)
         self.canvas.pack(side="left", fill="both", expand=True)
+
         self.scrollbar = ctk.CTkScrollbar(
             self, orientation="vertical", command=self.canvas.yview
         )
         self.scrollbar.pack(side="right", fill="y")
-
-        self.scrollable_frame = ctk.CTkFrame(self.canvas, fg_color="#1c1c1c")
-        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
-        # Scroll globale cross-platform
+        self.scrollable_frame = ctk.CTkFrame(self.canvas, fg_color="#1c1c1c")
+        self.canvas_window = self.canvas.create_window(
+            (0, 0), window=self.scrollable_frame, anchor="nw"
+        )
         self.scrollable_frame.bind(
             "<Configure>",
             lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")),
         )
-        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)  # Windows / Mac
-        self.canvas.bind_all("<Button-4>", self._on_mousewheel)  # Linux scroll up
-        self.canvas.bind_all("<Button-5>", self._on_mousewheel)  # Linux scroll down
+        self.canvas.bind("<Configure>", self._resize_scrollable_frame)
 
-        # --- Layout principale ---
-        self.scrollable_frame.grid_columnconfigure(0, weight=1)
-        self.center_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="transparent")
-        self.center_frame.grid(row=0, column=0, sticky="nsew", padx=50, pady=50)
-        self.center_frame.grid_columnconfigure(0, weight=1)
-        self.center_frame.grid_columnconfigure(1, weight=2)
-        self.center_frame.grid_columnconfigure(2, weight=1)
+        # Bind scroll
+        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+        self.canvas.bind_all("<Button-4>", self._on_mousewheel_linux_up)
+        self.canvas.bind_all("<Button-5>", self._on_mousewheel_linux_down)
 
-        # --- Componenti ---
+    def _resize_scrollable_frame(self, event):
+        self.canvas.itemconfig(self.canvas_window, width=event.width)
+
+    def _on_mousewheel(self, event):
+        self.canvas.yview_scroll(-1 * int(event.delta / 120), "units")
+
+    def _on_mousewheel_linux_up(self, event):
+        self.canvas.yview_scroll(-1, "units")
+
+    def _on_mousewheel_linux_down(self, event):
+        self.canvas.yview_scroll(1, "units")
+
+    # ------------------------
+    # Header Row: Avatar + Info + Refresh
+    # ------------------------
+    def _init_header_row(self):
+        self.header_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="#1c1c1c")
+        self.header_frame.pack(fill="x", padx=20, pady=0)
+
+        # Avatar a sinistra, allineato in alto
+        self._init_avatar()
+        self.avatar_component.avatar_frame.pack(side="left", padx=(0, 20), anchor="n")
+
+        # Info Studente al centro, allineato in alto
+        self._init_student_info()
+        self.info_frame.pack(
+            side="left", fill="both", expand=True, padx=(0, 20), pady=0, anchor="n"
+        )
+
+        # Refresh button a destra, allineato in alto
+        self._init_refresh_button()
+        self.refresh_btn.pack(side="right", padx=10, pady=0, anchor="n")
+
+    # --- Avatar Component ---
+    def _init_avatar(self):
         self.avatar_component = AvatarComponent(
-            self.center_frame,
+            self.header_frame,
             self.student_id,
             avatar_path=(
                 self.student["avatar_path"]
@@ -65,67 +111,50 @@ class DashboardView(ctk.CTkFrame):
                 else None
             ),
         )
-        self.init_student_info()
-        self.init_refresh_button()
-        self.init_exam_chart()
+        self.avatar_component.avatar_frame.pack(side="left", padx=(0, 20))
 
-        # --- Posizionamento ---
-        self.avatar_component.avatar_frame.grid(row=0, column=0, sticky="nsew")
-        self.info_frame.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
-        self.refresh_btn.grid(row=0, column=2, sticky="ne", padx=20, pady=20)
-        self.exam_chart_frame.grid(
-            row=1, column=0, columnspan=3, sticky="nsew", padx=20, pady=30
-        )
-
-        # --- Animazioni avatar hover ---
-        self.avatar_component.avatar_img_label.bind("<Enter>", self._avatar_hover_enter)
-        self.avatar_component.avatar_img_label.bind("<Leave>", self._avatar_hover_leave)
-
-    # ------------------------
-    # SCROLL DEL MOUSE GLOBALE
-    # ------------------------
-    def _on_mousewheel(self, event):
-        delta = 0
-        if event.num == 5 or event.delta < 0:
-            delta = 1
-        elif event.num == 4 or event.delta > 0:
-            delta = -1
-        self.canvas.yview_scroll(delta, "units")
-
-    # ------------------------
-    # AVATAR HOVER ANIMATION
-    # ------------------------
-    def _avatar_hover_enter(self, event):
-        self.avatar_component.avatar_img_label.configure(fg_color="#4da6ff")
-
-    def _avatar_hover_leave(self, event):
-        self.avatar_component.avatar_img_label.configure(fg_color="#444")
-
-    # ------------------------
-    # INFO STUDENTE + VOTO INIZIALE DI LAUREA
-    # ------------------------
-    def init_student_info(self):
+    # --- Info Studente ---
+    def _init_student_info(self):
         self.info_frame = ctk.CTkFrame(
-            self.center_frame,
+            self.header_frame,
             corner_radius=20,
             fg_color="#2a2a2a",
             border_width=2,
             border_color="#4da6ff",
         )
-        self.info_frame.grid(row=0, column=1, sticky="nsew", padx=(0, 20), pady=20)
+        self.info_frame.pack(
+            side="left", fill="both", expand=True, padx=(0, 20), pady=5
+        )
 
-        nome_completo = f"{self.student['nome']} {self.student['cognome']}"
-        ctk.CTkLabel(
-            self.info_frame, text=nome_completo, font=("Arial", 26, "bold")
-        ).pack(pady=(20, 5))
+        # Titolo
         ctk.CTkLabel(
             self.info_frame,
-            text=f"{self.student['corso']}",
-            font=("Arial", 18, "italic"),
+            text="Informazioni Studente",
+            font=("Arial", 20, "bold"),
             text_color="#4da6ff",
-        ).pack(pady=(0, 15))
+        ).pack(pady=(15, 15))
 
-        # --- Riassunto esami con cards animate ---
+        # Dettagli + statistiche
+        details_frame = ctk.CTkFrame(
+            self.info_frame, fg_color="#1c1c1c", corner_radius=15
+        )
+        details_frame.pack(fill="both", padx=15, pady=(0, 15))
+
+        # Info di base
+        for label, value in [
+            ("🧑 Nome", self.student["nome"]),
+            ("👤 Cognome", self.student["cognome"]),
+            ("🎓 Corso", self.student["corso"]),
+            ("🆔 Matricola", self.student["matricola"]),
+        ]:
+            ctk.CTkLabel(
+                details_frame, text=f"{label}: {value}", font=("Arial", 14)
+            ).pack(anchor="w", pady=5, padx=10)
+
+        # Statistiche esami
+        self._populate_student_stats(details_frame)
+
+    def _populate_student_stats(self, parent_frame):
         exams = get_exams(self.student_id)
         numeric_exams, cfu_acquisiti, cfu_totali_piano = [], 0, 0
         count_superati, count_non_superati = 0, 0
@@ -158,14 +187,11 @@ class DashboardView(ctk.CTkFrame):
         totale_cfu_numeric = sum(c[1] for c in numeric_exams)
         media = (
             sum(v * c for v, c in numeric_exams) / totale_cfu_numeric
-            if totale_cfu_numeric > 0
+            if totale_cfu_numeric
             else 0
         )
-
-        # --- Calcolo Voto Iniziale di Laurea (VIL) proporzionale 110/30 ---
         voto_iniziale_laurea = round(media * 110 / 30) if numeric_exams else "N/A"
 
-        # --- Cards ---
         stats = [
             ("📚 Esami superati", count_superati),
             ("❌ Esami non superati", count_non_superati),
@@ -175,126 +201,108 @@ class DashboardView(ctk.CTkFrame):
             ("🏆 Voto Iniziale di Laurea", voto_iniziale_laurea),
         ]
 
-        for title, val in stats:
-            card = ctk.CTkFrame(self.info_frame, corner_radius=10, fg_color="#333")
-            card.pack(fill="x", padx=20, pady=5)
-            ctk.CTkLabel(card, text=f"{title}: {val}", font=("Arial", 16)).pack(pady=5)
+        # Stile uniforme con info di base
+        for label, val in stats:
+            ctk.CTkLabel(
+                parent_frame,
+                text=f"{label}: {val}",
+                font=("Arial", 14),
+                anchor="w",
+                padx=10,
+            ).pack(fill="x", pady=5)
 
-    # ------------------------
-    # REFRESH BUTTON E ANIMAZIONE
-    # ------------------------
-    def init_refresh_button(self):
-        self.refresh_frame = ctk.CTkFrame(
-            self.center_frame, corner_radius=10, fg_color="transparent"
+    # --- Refresh Button ---
+    def _init_refresh_button(self):
+        # Usare CTkImage per compatibilità HighDPI
+        self.refresh_ctk_image = ctk.CTkImage(
+            light_image=Image.open(resource_path("assets/icons/reload.png")),
+            dark_image=Image.open(resource_path("assets/icons/reload.png")),
+            size=(28, 28),
         )
-        self.refresh_frame.grid(row=0, column=2, sticky="ne", padx=20, pady=20)
-
-        self.refresh_img_orig = Image.open(
-            resource_path("assets/icons/reload.png")
-        ).resize((24, 24))
-        self.refresh_photo = ImageTk.PhotoImage(self.refresh_img_orig)
 
         self.refresh_btn = ctk.CTkButton(
-            self.refresh_frame,
-            image=self.refresh_photo,
+            self.header_frame,
+            image=self.refresh_ctk_image,
             text="",
-            width=40,
-            height=40,
-            fg_color="#444444",
-            hover_color="#666666",
-            corner_radius=20,
-            command=self.refresh_content,
+            width=50,
+            height=50,
+            fg_color="#4da6ff",
+            hover_color="#6ab0ff",
+            corner_radius=25,
+            command=self._update_dashboard,
         )
-        self.refresh_btn.pack()
-
-    def animate_refresh(self, angle=0):
-        if not getattr(self, "refreshing", False):
-            return
-        rotated = self.refresh_img_orig.rotate(angle)
-        self.refresh_photo = ImageTk.PhotoImage(rotated)
-        self.refresh_btn.configure(image=self.refresh_photo)
-        self.after(50, lambda: self.animate_refresh(angle + 15))
-
-    def refresh_content(self):
-        if getattr(self, "refreshing", False):
-            return
-        self.refreshing = True
-        self.animate_refresh()
-        self.student = get_student(self.student_id) or self.student
-        for w in self.center_frame.winfo_children():
-            w.destroy()
-        self.avatar_component = AvatarComponent(
-            self.center_frame,
-            self.student_id,
-            avatar_path=(
-                self.student["avatar_path"]
-                if self.student and "avatar_path" in self.student.keys()
-                else None
-            ),
-        )
-        self.init_student_info()
-        self.init_refresh_button()
-        self.init_exam_chart()
-        self.after(1000, lambda: setattr(self, "refreshing", False))
+        self.refresh_btn.pack(side="right", padx=10, pady=10)
 
     # ------------------------
-    # GRAFICO ESAMI CON COLORI DINAMICI E TOOLTIP
+    # Exam Chart
     # ------------------------
-    def init_exam_chart(self):
+    def _init_exam_chart(self):
         self.exam_chart_frame = ctk.CTkFrame(
-            self.center_frame,
+            self.scrollable_frame,
             corner_radius=15,
             fg_color="#2a2a2a",
-            height=600,  # aumento altezza
         )
-        self.exam_chart_frame.grid(
-            row=1, column=0, columnspan=3, sticky="nsew", padx=20, pady=30
-        )
+        # Aumentiamo il padding verticale per dare più spazio
+        self.exam_chart_frame.pack(fill="both", padx=20, pady=80, expand=True)
 
         exams = get_exams(self.student_id)
         valid_exams = []
+        exam_labels = []
 
         for i, e in enumerate(exams):
-            voto_raw = e[2]
+            nome_raw, voto_raw = e[1], e[2]
             if not voto_raw:
                 continue
             voto_str = str(voto_raw).strip().upper()
             if voto_str.endswith("L") and voto_str[:-1].isdigit():
                 voto = int(voto_str[:-1])
-                valid_exams.append((i + 1, voto))
             elif voto_str.isdigit():
                 voto = int(voto_str)
-                valid_exams.append((i + 1, voto))
+            else:
+                continue
 
-        if not exams or not valid_exams:
+            valid_exams.append((i + 1, voto))
+            # Genera acronimo se troppo lungo
+            if len(nome_raw) > 15:
+                acr = "".join(word[0].upper() for word in nome_raw.split())
+            else:
+                acr = nome_raw
+            exam_labels.append((acr, nome_raw))
+
+        if not valid_exams:
             text = (
                 "Nessun esame inserito!"
                 if not exams
                 else "Nessun voto numerico disponibile!"
             )
-            ctk.CTkLabel(self.exam_chart_frame, text=text, font=("Arial", 16)).pack(
-                pady=20
-            )
+            ctk.CTkLabel(
+                self.exam_chart_frame, text=text, font=("Arial", 16), text_color="white"
+            ).pack(pady=20)
             return
 
         exam_indices, exam_scores = zip(*valid_exams)
-        fig = Figure(figsize=(12, 8), dpi=100)  # altezza figura aumentata da 6 a 8
+        # Aumentiamo l'altezza del grafico matplotlib
+        fig = plt.Figure(figsize=(14, 10), dpi=100)
         ax = fig.add_subplot(111)
+
         colors = [
             "#e63946" if v < 24 else "#f1c40f" if v < 28 else "#2ecc71"
             for v in exam_scores
         ]
-        ax.scatter(
-            exam_indices, exam_scores, color=colors, s=120
-        )  # punti leggermente più grandi
+        ax.scatter(exam_indices, exam_scores, color=colors, s=140)
         ax.plot(exam_indices, exam_scores, color="#e63946", linewidth=2, alpha=0.6)
+
         ax.set_ylim(18, 31)
         ax.set_title("Andamento voti", color="white")
         ax.set_xlabel("Esami", color="white")
         ax.set_ylabel("Voto", color="white")
         ax.set_xticks(exam_indices)
         ax.set_xticklabels(
-            exam_indices, rotation=45, ha="right", fontsize=12, color="white"
+            [a[0] for a in exam_labels],
+            rotation=45,
+            ha="right",
+            fontsize=12,
+            color="white",
         )
         ax.tick_params(axis="y", colors="white", labelsize=12)
         ax.set_facecolor("#2a2a2a")
@@ -304,9 +312,32 @@ class DashboardView(ctk.CTkFrame):
         canvas_fig.draw()
         canvas_fig.get_tk_widget().pack(fill="both", expand=True, pady=20, padx=10)
 
-        # Tooltip voti interattivi
+        # Tooltip con nome completo
         cursor = mplcursors.cursor(ax, hover=True)
-        cursor.connect(
-            "add",
-            lambda sel: sel.annotation.set_text(f"Voto: {exam_scores[sel.index]}"),
-        )
+
+        def show_full_name(sel):
+            index = int(sel.index)
+            nome_completo = exam_labels[index][1]
+            sel.annotation.set_text(f"{nome_completo}\nVoto: {exam_scores[index]}")
+
+        cursor.connect("add", show_full_name)
+
+    # ------------------------
+    # Dummy elementi aggiuntivi
+    # ------------------------
+    def _populate_dummy_elements(self):
+        for i in range(10):
+            frame = ctk.CTkFrame(
+                self.scrollable_frame, corner_radius=10, fg_color="#333"
+            )
+            frame.pack(fill="x", padx=20, pady=10)
+            ctk.CTkLabel(
+                frame, text=f"Elemento fittizio {i+1}", font=("Arial", 16)
+            ).pack(padx=10, pady=10)
+
+    # ------------------------
+    # Aggiornamento dashboard
+    # ------------------------
+    def _update_dashboard(self):
+        self.destroy()
+        DashboardView(self.master, self.student_id)

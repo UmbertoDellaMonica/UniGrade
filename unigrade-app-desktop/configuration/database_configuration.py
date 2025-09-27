@@ -1,6 +1,5 @@
 import sqlite3
-
-DB_NAME = "unigrade.db"
+from configuration.unigrade_configuration import DB_NAME
 
 
 def init_db():
@@ -28,7 +27,7 @@ def init_db():
     CREATE TABLE IF NOT EXISTS exams (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         student_id INTEGER,
-        nome TEXT,
+        nome TEXT UNIQUE,
         voto TEXT,
         cfu INTEGER,
         FOREIGN KEY(student_id) REFERENCES students(id)
