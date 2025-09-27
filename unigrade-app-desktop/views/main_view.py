@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from utils import set_app_icon
+from utils import set_app_icon, clear_token
 
 
 class MainView:
@@ -58,7 +58,8 @@ class MainView:
         # Pulisce il contenuto prima di mostrare la nuova view
         for w in self.content.winfo_children():
             w.destroy()
-        DashboardView(self.content, self.student_id)
+        dashboard = DashboardView(self.content, self.student_id)
+        dashboard.pack(fill="both", expand=True)  # <-- questa è la chiave
 
     def show_libretto(self):
         from views.main_sub_view.libretto_view import LibrettoView
@@ -94,7 +95,7 @@ class MainView:
 
         # Funzione di conferma
         def conferma():
-            # clear_token()  # se vuoi mantenere le credenziali, lascia commentato
+            clear_token()  # <- Rimuove il token salvato
             modal.destroy()
             self.container.destroy()  # elimina tutta la MainView
             from app import HomePage

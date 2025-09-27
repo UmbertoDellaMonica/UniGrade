@@ -2,6 +2,12 @@ import customtkinter as ctk
 
 from controllers.auth_controller import login
 from controllers.student_controller import get_student_by_matricola
+from configuration.unigrade_configuration import (
+    JWT_ALGORITHM,
+    JWT_EXP_DELTA_DAYS,
+    JWT_SECRET,
+)
+
 
 from utils import show_temp_message, set_app_icon
 from utils import save_token, load_token, clear_token, hash_password
@@ -9,11 +15,6 @@ from utils import save_token, load_token, clear_token, hash_password
 
 import jwt
 import datetime
-
-# Chiave segreta locale per firmare i token JWT
-JWT_SECRET = "unigrade_local_secret_key"
-JWT_ALGORITHM = "HS256"
-JWT_EXP_DELTA_DAYS = 7  # token valido 7 giorni
 
 
 class LoginView:
