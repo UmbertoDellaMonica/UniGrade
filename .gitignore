@@ -2,7 +2,7 @@
 unigrade-env
 
 # Database - App
-unigrade.db
+*.db
 # Session JWT local token to have auto login action 
 session.token
 
@@ -11,6 +11,8 @@ session.token
 # Distribution - application
 dist/
 build/
+*.spec
+
 
 __pycache__/
 .pyc
