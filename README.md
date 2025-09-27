@@ -70,10 +70,16 @@ Activate the Python environment:
 .\activate-env.bat
 ```
 
-Build the program from source on *Windows* , *Linux*, *MacOS*:
+Build the program from source on *Windows* , *Linux*:
 
 ```sh
 pyinstaller --onefile --windowed --icon=assets/unigrade-logo-icon.ico --add-data "assets;assets" app.py --name UniGrade
+```
+
+Only for *MacOS*:
+
+```sh
+pyinstaller --onefile --windowed --icon=assets/unigrade-logo-icon.icsn --add-data "assets;assets" app.py --name UniGrade
 ```
 
 </details>
@@ -129,10 +135,16 @@ Attiva l’environment Python:
 .\activate-env.bat
 ```
 
-Builda il programma da sorgente per i seguenti Sistemi Operativi *Windows* , *Linux* , *MacOS* :
+Builda il programma da sorgente per i seguenti Sistemi Operativi *Windows* , *Linux* :
 
 ```sh
-pyinstaller --onefile --windowed --name UniGrade --icon assets/unigrade-logo-icon.icns --add-data "assets:assets" --add-data "default.env:." app.py
+pyinstaller --onefile --windowed --name UniGrade --icon assets/unigrade-logo-icon.ico --add-data "assets:assets" --add-data "default.env:." app.py
+```
+
+Solo per Sistemi Operativi *MacOS* : 
+
+```sh
+pyinstaller --onefile --windowed --icon=assets/unigrade-logo-icon.icsn --add-data "assets;assets" app.py --name UniGrade
 ```
 
 </details>
