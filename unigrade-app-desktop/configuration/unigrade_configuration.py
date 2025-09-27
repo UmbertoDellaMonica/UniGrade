@@ -19,6 +19,13 @@ JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXP_DELTA_DAYS = int(os.getenv("JWT_EXP_DELTA_DAYS", 7))
 
 
+# ---- Exam Service ---
+
+DISPLAY_30L = "30L"
+PASSED = "SUPERATO"
+NOT_PASSED = "NON SUPERATO"
+
+
 # ---- Service ----
 
 

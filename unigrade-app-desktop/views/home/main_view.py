@@ -2,75 +2,49 @@ import customtkinter as ctk
 from configuration.unigrade_configuration import set_app_icon
 from configuration.unigrade_token_configuration import clear_token
 
+from views.home.home_view_components.home_sidebar_component import HomeSidebar
+from views.home.home_view_components.home_header_component import HomeHeader
+from views.home.home_view_components.home_content_component import HomeContent
+
 
 class MainView:
     def __init__(self, master, student_id):
         self.master = master
         self.student_id = student_id
 
-        # --- Container principale della MainView ---
+        # Container principale
         self.container = ctk.CTkFrame(master)
         self.container.pack(fill="both", expand=True)
 
-        # Sidebar
-        self.sidebar = ctk.CTkFrame(
-            self.container, width=220, corner_radius=0, fg_color="#11111b"
-        )
-        self.sidebar.pack(side="left", fill="y", pady=20)
-
-        # Content
-        self.content = ctk.CTkFrame(
-            self.container, corner_radius=20, fg_color="#2e2e3e"
-        )
-        self.content.pack(side="right", expand=True, fill="both", padx=25, pady=25)
-
-        # Header frame per icona refresh (se vuoi usarlo nella content)
-        self.header_frame = ctk.CTkFrame(
-            self.content, fg_color="transparent", height=50
-        )
-        self.header_frame.pack(fill="x", pady=(0, 15))
-
-        # Sidebar buttons
-        buttons = [
+        # Content components
+        self.sidebar_buttons = [
             ("🏠 Dashboard", self.show_dashboard),
             ("📚 Libretto", self.show_libretto),
             ("🚪 Logout", self.logout),
         ]
-
-        for text, cmd in buttons:
-            ctk.CTkButton(
-                self.sidebar,
-                text=text,
-                command=cmd,
-                anchor="w",
-                height=60,
-                corner_radius=15,
-                font=("Arial", 16, "bold"),
-                fg_color="#1a1a2e",
-                hover_color="#33334d",
-            ).pack(fill="x", pady=10, padx=15)
+        self.sidebar = HomeSidebar(self.container, self.sidebar_buttons)
+        self.content = HomeContent(self.container)
+        self.header_frame = HomeHeader(self.content)
 
         # Mostra la dashboard di default
         self.show_dashboard()
 
     def show_dashboard(self):
-        from views.main_sub_view.dashboard_view import DashboardView
+        from views.home.home_view_components.dashboard.dashboard_view import (
+            DashboardView,
+        )
 
-        # Pulisce il contenuto prima di mostrare la nuova view
-        for w in self.content.winfo_children():
-            w.destroy()
+        self.content.clear()
         dashboard = DashboardView(self.content, self.student_id)
-        dashboard.pack(fill="both", expand=True)  # <-- questa è la chiave
+        dashboard.pack(fill="both", expand=True)
 
     def show_libretto(self):
-        from views.main_sub_view.libretto_view import LibrettoView
+        from views.home.home_view_components.libretto.libretto_view import LibrettoView
 
-        for w in self.content.winfo_children():
-            w.destroy()
+        self.content.clear()
         LibrettoView(self.content, self.student_id)
 
     def logout(self):
-        # Finestra modale
         modal = ctk.CTkToplevel(self.master)
         modal.title("Conferma Logout")
         modal.geometry("450x270")
@@ -94,16 +68,14 @@ class MainView:
             text_color="#ffffff",
         ).pack(pady=(5, 25))
 
-        # Funzione di conferma
         def conferma():
-            clear_token()  # <- Rimuove il token salvato
+            clear_token()
             modal.destroy()
-            self.container.destroy()  # elimina tutta la MainView
+            self.container.destroy()
             from app import HomePage
 
-            HomePage(self.master)  # mostra la HomePage
+            HomePage(self.master)
 
-        # Pulsanti
         buttons_frame = ctk.CTkFrame(modal, fg_color="transparent")
         buttons_frame.pack(pady=10)
 

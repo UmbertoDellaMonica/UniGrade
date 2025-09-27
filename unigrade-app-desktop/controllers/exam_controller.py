@@ -48,14 +48,22 @@ def add_exam(student_id, nome, voto=None, cfu=0):
     return True
 
 
-def update_exam(exam_id, nome, voto, cfu):
+def update_exam(exam_id, nome, vote, cfu):
+    print("DEBUG controller update_exam called")
+    print(f"exam_id={exam_id}, exam_name={nome}, vote={vote}, cfu={cfu}")
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute(
-        "UPDATE exams SET nome=?, voto=?, cfu=? WHERE id=?", (nome, voto, cfu, exam_id)
-    )
-    conn.commit()
-    conn.close()
+    try:
+        cur.execute(
+            "UPDATE exams SET nome=?, voto=?, cfu=? WHERE id=?",
+            (nome, vote, cfu, exam_id),
+        )
+        conn.commit()
+        print("DEBUG controller update_exam: commit avvenuto")
+        return True
+    except Exception as e:
+        print("DEBUG controller update_exam ERROR:", e)
+        return False
 
 
 def remove_exam(exam_id):
