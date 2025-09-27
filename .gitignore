@@ -6,6 +6,8 @@ unigrade.db
 # Session JWT local token to have auto login action 
 session.token
 
+.env
+
 # Distribution - application
 dist/
 build/
